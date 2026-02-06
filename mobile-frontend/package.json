@@ -1,0 +1,17 @@
+{
+  "name": "mobile-frontend",
+  "version": "0.0.1",
+  "private": true,
+  "scripts": {
+    "start": "react-native start",
+    "android": "react-native run-android",
+    "ios": "react-native run-ios"
+  },
+  "devDependencies": {
+    "@react-native-community/cli": "latest"
+  },
+  "dependencies": {
+    "react": "18.2.0",
+    "react-native": "0.73.0"
+  }
+}
