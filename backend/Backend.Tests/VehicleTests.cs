@@ -244,7 +244,7 @@ public class VehicleTests : IClassFixture<TestWebApplicationFactory>
     }
 
     [Fact]
-    public async Task DeleteVehicle_OfAnotherUser_ReturnsForbidden()
+    public async Task DeleteVehicle_OfAnotherUser_ReturnsNotFound()
     {
         // Arrange - User 1 creates a vehicle
         var token1 = await GetAuthTokenAsync("owner", "owner@example.com");
@@ -270,6 +270,7 @@ public class VehicleTests : IClassFixture<TestWebApplicationFactory>
         var response = await _client.DeleteAsync($"/api/vehicles/{createdVehicle!.Id}");
 
         // Assert
-        Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
+        // Backend returns NotFound for security (don't reveal resource existence)
+        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
     }
 }
