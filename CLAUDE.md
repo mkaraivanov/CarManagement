@@ -196,6 +196,166 @@ Authorization: Bearer <jwt_token>
 - Seed data includes 10 makes and 60+ models
 - To modify seed data, edit `SeedCarMakesAndModels()` method and create migration
 
+## Best Practices & Workflows
+
+This project is a solo development effort with AI assistance. These practices help maintain code quality and keep the AI effective.
+
+### Git Workflow
+
+**Branching Strategy:**
+- Create feature branches for significant changes: `feature/add-fuel-ui`, `fix/auth-bug`, `refactor/service-layer`
+- Keeps `main` branch clean and makes it easier to abandon unsuccessful experiments
+- Can push to `main` directly for small fixes; use branches for larger features
+- Delete branches after merging or abandoning
+
+**Commit Practices:**
+- Commit when code works and is tested (not broken code)
+- Clear commit messages describing what and why
+- Test end-to-end before pushing
+
+### Backend Development Workflow
+
+**When Adding/Modifying Database Entities (CRITICAL WORKFLOW):**
+
+This is a common area where AI makes mistakes. Follow these steps in order:
+
+1. Create or update Model in `backend/Models/` with EF Core annotations
+2. Update `ApplicationDbContext.cs`:
+   - Add `DbSet<EntityName>` property if new entity
+   - Configure relationships in `OnModelCreating()` if needed
+3. **Create migration**: `dotnet ef migrations add DescriptiveName`
+4. **Apply migration**: `dotnet ef database update`
+5. Create DTOs in `backend/DTOs/` (request and response DTOs)
+6. Create Service interface in `backend/Services/IEntityService.cs`
+7. Implement Service in `backend/Services/EntityService.cs`
+8. **Register service in `Program.cs`** (AI commonly forgets this step!)
+   ```csharp
+   builder.Services.AddScoped<IEntityService, EntityService>();
+   ```
+9. Create Controller in `backend/Controllers/`
+10. Test with curl or frontend
+11. Update `backend/API.md` with new endpoints
+
+**Critical Backend Rules:**
+
+- **Business logic belongs in Services**, not Controllers (Controllers should be thin routing layers)
+- **Never expose Models directly** - always use DTOs for API requests/responses
+- **Always create migrations** after model changes (don't skip this!)
+- **Always register new services** in `Program.cs` DI container
+- **Add `[Authorize]` attribute** to all endpoints except login/register
+- **Return proper HTTP status codes**: 200 (OK), 201 (Created), 400 (Bad Request), 404 (Not Found), 500 (Server Error)
+- **Validate inputs** using Data Annotations in DTOs
+
+**Common AI Mistakes on Backend:**
+- ❌ Forgetting to create migration after model changes
+- ❌ Not registering new services in `Program.cs` DI container
+- ❌ Putting business logic in Controllers instead of Services
+- ❌ Exposing Models directly instead of using DTOs
+- ❌ Modifying existing migrations (always create new ones)
+- ❌ Not adding `[Authorize]` to protected endpoints
+
+### Frontend Development Workflow
+
+**When Adding Features:**
+
+1. API calls must go through service layer (`src/services/`), **never call axios directly in components**
+2. Use `AuthContext` for authentication state
+3. Forms must use React Hook Form + Yup for validation
+4. Show loading states for async operations
+5. Display user-friendly error messages using Material-UI Snackbar/Alert
+
+**Frontend Patterns to Follow:**
+
+- Protected pages wrapped in `<ProtectedRoute>`
+- Service files return `response.data`, not the full axios response
+- JWT token handled automatically by axios interceptors in `api.js`
+- Use try-catch blocks for API calls in components
+- Clear error messages for users (not raw error objects)
+
+**Common AI Mistakes on Frontend:**
+- ❌ Calling axios directly from components (use service layer)
+- ❌ Not showing loading states during async operations
+- ❌ Exposing technical errors to users
+- ❌ Not using React Hook Form for complex forms
+- ❌ Breaking the service layer pattern
+
+### Before Committing - AI Checklist
+
+Run through this checklist before every commit:
+
+**Must Verify:**
+- [ ] If database models changed: migration created AND applied
+- [ ] If new service created: registered in `Program.cs` DI container
+- [ ] Backend compiles: `cd backend && dotnet build`
+- [ ] Frontend lints: `cd web-frontend && npm run lint`
+- [ ] Tested end-to-end (both UI and API working together)
+- [ ] `backend/API.md` updated if endpoints changed
+- [ ] No console errors in browser developer tools
+- [ ] No exceptions in backend console output
+
+**Common Checks:**
+- Backend running on correct port (5239)
+- Frontend running on correct port (5173)
+- CORS configured for frontend URL
+- JWT token being sent in requests (check Network tab)
+- Database file exists and has tables
+
+### Database & Migration Best Practices
+
+**Migration Workflow:**
+- **Never modify existing migrations** that have been committed - create new ones instead
+- Test migrations locally before committing
+- Backup database before major schema changes: `cp backend/carmanagement.db backend/carmanagement.db.backup`
+- If migration fails, rollback and fix:
+  ```bash
+  dotnet ef database update PreviousMigrationName
+  dotnet ef migrations remove
+  # Fix the issue, then create new migration
+  dotnet ef migrations add FixedMigrationName
+  dotnet ef database update
+  ```
+
+**Database Maintenance:**
+- SQLite database file: `backend/carmanagement.db`
+- Connection string in `backend/appsettings.json`
+- To reset database completely: delete file and run `dotnet ef database update`
+
+### Security Best Practices
+
+**Authentication & Authorization:**
+- JWT secret must be 32+ characters (already configured correctly)
+- All endpoints except `/api/auth/register` and `/api/auth/login` need `[Authorize]` attribute
+- Validate all user inputs in DTOs (backend) and forms (frontend)
+- Never commit secrets, API keys, or production connection strings
+- Use different JWT secrets for development and production
+
+**Token Handling:**
+- Tokens stored in localStorage (key: `'token'`)
+- Token automatically included in requests via axios interceptor
+- 401 responses automatically clear token and redirect to login
+- Token expiration: 1 hour (configurable in `appsettings.json`)
+
+### Code Quality & Consistency
+
+**Follow Existing Patterns:**
+- Match the architectural patterns already in the codebase
+- Controllers → Services → Data/Models on backend
+- Components → Services → API on frontend
+- Keep DTOs in sync between requests and responses
+- Use existing naming conventions (PascalCase for C#, camelCase for JavaScript)
+
+**Code Organization:**
+- Extract reusable logic into utility functions or custom hooks
+- Keep components focused and small (single responsibility)
+- Remove unused imports and dead code
+- Group related files together
+
+**API Documentation:**
+- Update `backend/API.md` whenever adding or changing endpoints
+- Include request/response examples
+- Document required vs optional fields
+- Note authorization requirements
+
 ## Testing the Application
 
 ### Full Flow Test
