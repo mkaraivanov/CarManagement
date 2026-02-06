@@ -356,7 +356,89 @@ Run through this checklist before every commit:
 - Document required vs optional fields
 - Note authorization requirements
 
-## Testing the Application
+## Automated Testing
+
+### Backend Integration Tests
+
+**Test Project Location:** `backend/Backend.Tests/`
+
+**Running Tests:**
+```bash
+cd backend/Backend.Tests
+dotnet test                    # Run all tests
+dotnet test --verbosity normal # Run with detailed output
+dotnet test --filter "FullyQualifiedName~Authentication"  # Run specific test class
+```
+
+**Test Infrastructure:**
+- **xUnit** testing framework
+- **WebApplicationFactory** for integration testing
+- **In-Memory Database** automatically used in Testing environment
+- Tests run against real API with isolated database per test run
+
+**Current Test Coverage (13 tests - All Passing ✅):**
+
+*Authentication Tests (6):*
+- Register with valid data returns token and user
+- Register with duplicate username returns bad request
+- Login with valid credentials returns token
+- Login with invalid password returns unauthorized
+- Get current user with valid token returns user data
+- Get current user without token returns unauthorized
+
+*Vehicle Tests (7):*
+- Create vehicle with valid data returns created vehicle
+- Create vehicle without token returns unauthorized
+- Get vehicles returns only user's vehicles (authorization)
+- Get vehicle by ID returns vehicle
+- Update vehicle with valid data returns updated vehicle
+- Delete vehicle with valid ID returns no content
+- Delete vehicle of another user returns not found (authorization)
+
+**Writing New Tests:**
+
+When adding new features, follow this pattern:
+
+```csharp
+public class NewFeatureTests : IClassFixture<TestWebApplicationFactory>
+{
+    private readonly HttpClient _client;
+
+    public NewFeatureTests(TestWebApplicationFactory factory)
+    {
+        _client = factory.CreateClient();
+    }
+
+    [Fact]
+    public async Task Feature_WithValidInput_ReturnsExpectedResult()
+    {
+        // Arrange
+        var request = new { /* test data */ };
+
+        // Act
+        var response = await _client.PostAsJsonAsync("/api/endpoint", request);
+
+        // Assert
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+    }
+}
+```
+
+**Important Testing Notes:**
+- Each test gets a fresh in-memory database (isolation)
+- Test environment automatically set via `TestWebApplicationFactory`
+- No need to manually configure database - handled by Program.cs
+- Authorization tests verify users can only access their own data
+- Backend returns 404 (not 403) for unauthorized access (security best practice)
+
+**Before Committing Code:**
+```bash
+# Always run tests before pushing
+cd backend/Backend.Tests && dotnet test
+# All tests must pass
+```
+
+## Testing the Application Manually
 
 ### Full Flow Test
 1. Start backend: `cd backend && dotnet run`
