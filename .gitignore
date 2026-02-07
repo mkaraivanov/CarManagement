@@ -1,11 +1,16 @@
 # Backend
 backend/bin/
 backend/obj/
+backend/Backend.Tests/bin/
+backend/Backend.Tests/obj/
 backend/carmanagement.db
 backend/carmanagement.db-shm
 backend/carmanagement.db-wal
 backend/.vs/
 backend/*.user
+backend/uploads/
+backend/tessdata/
+backend/backend/
 
 # Frontend
 web-frontend/node_modules/
