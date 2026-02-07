@@ -29,8 +29,22 @@ const ExtractedDataReview = ({ extractedData, onUseData, onCancel }) => {
     return initial;
   });
 
+  // Convert numeric confidence (0-1) to level string
+  const getConfidenceLevel = (confidence) => {
+    if (typeof confidence === 'string') {
+      return confidence.toLowerCase();
+    }
+    if (typeof confidence === 'number') {
+      if (confidence >= 0.8) return 'high';
+      if (confidence >= 0.5) return 'medium';
+      return 'low';
+    }
+    return 'unknown';
+  };
+
   const getConfidenceColor = (confidence) => {
-    switch (confidence?.toLowerCase()) {
+    const level = getConfidenceLevel(confidence);
+    switch (level) {
       case 'high':
         return 'success';
       case 'medium':
@@ -43,7 +57,8 @@ const ExtractedDataReview = ({ extractedData, onUseData, onCancel }) => {
   };
 
   const getConfidenceIcon = (confidence) => {
-    switch (confidence?.toLowerCase()) {
+    const level = getConfidenceLevel(confidence);
+    switch (level) {
       case 'high':
         return <CheckCircle fontSize="small" />;
       case 'medium':
@@ -85,7 +100,7 @@ const ExtractedDataReview = ({ extractedData, onUseData, onCancel }) => {
 
   const hasLowConfidenceFields = extractedData?.extractedData &&
     Object.values(extractedData.extractedData).some(
-      (field) => field?.confidence?.toLowerCase() === 'low'
+      (field) => getConfidenceLevel(field?.confidence) === 'low'
     );
 
   return (
@@ -129,7 +144,7 @@ const ExtractedDataReview = ({ extractedData, onUseData, onCancel }) => {
                         endAdornment: (
                           <Chip
                             size="small"
-                            label={fieldData.confidence || 'Unknown'}
+                            label={getConfidenceLevel(fieldData.confidence).toUpperCase()}
                             color={getConfidenceColor(fieldData.confidence)}
                             icon={getConfidenceIcon(fieldData.confidence)}
                             sx={{ ml: 1 }}
