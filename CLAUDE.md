@@ -54,6 +54,9 @@ npm run dev                  # Start dev server on http://localhost:5173
 npm run build                # Production build
 npm run lint                 # Run ESLint
 npm run preview              # Preview production build
+npm test                     # Run frontend tests (Vitest)
+npm run test:ui              # Run tests with visual UI
+npm run test:coverage        # Run tests with coverage report
 ```
 
 ### Mobile Frontend (React Native)
@@ -67,6 +70,32 @@ npm run ios                 # Run on iOS simulator
 bundle install              # Install Ruby bundler for CocoaPods
 bundle exec pod install     # Install iOS native dependencies
 ```
+
+### Testing Commands
+
+**CRITICAL: Run all tests before committing any changes!**
+
+```bash
+# Backend Tests (xUnit)
+cd backend
+dotnet test                                    # Run all backend tests
+dotnet test --filter "ClassName~YourTest"     # Run specific test class
+dotnet test --logger "console;verbosity=detailed"  # Verbose output
+
+# Frontend Tests (Vitest + React Testing Library)
+cd web-frontend
+npm test                                       # Run all frontend tests
+npm run test:ui                               # Run with visual UI
+npm run test:coverage                         # Run with coverage report
+
+# Run ALL tests (backend + frontend)
+cd backend && dotnet test && cd ../web-frontend && npm test -- --run
+```
+
+**Expected Results:**
+- Backend: 18 tests passing ✅
+- Frontend: 11 tests passing ✅
+- **Total: 29 tests** - All must pass before committing!
 
 ### Database Management
 ```bash
@@ -253,6 +282,46 @@ This project is a solo development effort with AI assistance. These practices he
 - Only features with working end-to-end integration = **complete**
 - Document incomplete features in [`INCOMPLETE_FEATURES.md`](INCOMPLETE_FEATURES.md)
 - Mark backend-only endpoints as "⚠️ No Frontend Yet" in `backend/API.md`
+
+### Testing Requirements
+
+**CRITICAL: Always run tests after making changes and before committing!**
+
+**When to run tests:**
+1. **After writing new code** - Verify it works correctly
+2. **After fixing bugs** - Ensure the fix works and no regressions
+3. **After refactoring** - Confirm behavior hasn't changed
+4. **Before committing** - All tests must pass
+5. **Before pushing** - Final verification
+
+**Test workflow:**
+```bash
+# 1. Make your changes
+
+# 2. Run affected tests
+cd backend && dotnet test  # If you changed backend
+cd web-frontend && npm test -- --run  # If you changed frontend
+
+# 3. If all tests pass, commit
+git add .
+git commit -m "Your message"
+
+# 4. Run ALL tests before pushing
+cd backend && dotnet test && cd ../web-frontend && npm test -- --run
+
+# 5. If all tests pass, push
+git push origin main
+```
+
+**Current test coverage:**
+- Backend: 18 tests (authentication, vehicles, fuel, service records, OCR)
+- Frontend: 11 tests (ExtractedDataReview component, confidence handling)
+- **Total: 29 tests** - all must pass ✅
+
+**Writing tests for new features:**
+- Backend: Create test class in `Backend.Tests/` using xUnit
+- Frontend: Create `.test.jsx` file alongside component using Vitest + React Testing Library
+- See [`TESTING.md`](TESTING.md) for detailed testing guidelines
 
 ### Development Workflows
 
