@@ -13,12 +13,25 @@ CarManagement is a full-stack vehicle management application with three main com
 
 This project uses structured documentation to maintain clarity and organization:
 
-- **`CLAUDE.md`** (this file) - AI assistant guide: workflows, patterns, best practices
-- **`backend/API.md`** - Complete API reference with request/response examples
-- **`docs/`** - Feature design documents and architecture decisions
-  - **`docs/features/`** - Detailed feature implementation plans
-  - **`docs/architecture/`** - System architecture and design decisions
-  - **`docs/adr/`** - Architecture Decision Records (ADRs)
+### Core Documentation
+- **[`CLAUDE.md`](CLAUDE.md)** (this file) - AI assistant guide: architecture, patterns, conventions
+- **[`WORKFLOWS.md`](WORKFLOWS.md)** - Development workflows and best practices
+- **[`TESTING.md`](TESTING.md)** - Testing strategies and procedures
+- **[`TROUBLESHOOTING.md`](TROUBLESHOOTING.md)** - Common issues and solutions
+- **[`INCOMPLETE_FEATURES.md`](INCOMPLETE_FEATURES.md)** - Feature completion tracker
+
+### API & Feature Documentation
+- **[`backend/API.md`](backend/API.md)** - Complete API reference with request/response examples
+- **[`docs/`](docs/)** - Feature design documents and architecture decisions
+  - **[`docs/features/`](docs/features/)** - Detailed feature implementation plans
+  - **[`docs/architecture/`](docs/architecture/)** - System architecture and design decisions
+  - **[`docs/adr/`](docs/adr/)** - Architecture Decision Records (ADRs)
+
+### Quick Reference
+- **New features?** → Start with [`WORKFLOWS.md`](WORKFLOWS.md) → Feature Design Documentation
+- **Tests failing?** → Check [`TESTING.md`](TESTING.md)
+- **Errors?** → See [`TROUBLESHOOTING.md`](TROUBLESHOOTING.md)
+- **Backend API without UI?** → Document in [`INCOMPLETE_FEATURES.md`](INCOMPLETE_FEATURES.md)
 
 **See [`docs/README.md`](docs/README.md) for complete documentation guidelines.**
 
@@ -153,11 +166,10 @@ src/
 - `VITE_API_URL`: Backend API base URL (default: `http://localhost:5239/api`)
 
 **CORS:**
-- Backend allows requests from `http://localhost:5173` and `http://localhost:5175` (configured in Program.cs)
-- **Important**: If the frontend runs on a different port (Vite uses 5173 by default, but will use 5175+ if 5173 is occupied), you must update the CORS policy in `Program.cs` line 62 to include that port
-- To add the new port: `policy.WithOrigins("http://localhost:5173", "http://localhost:XXXX")`
-- After updating CORS, restart the backend for changes to take effect
-- **Common issue**: CORS errors in browser console indicate the frontend port is not in the allowed origins list
+- Backend allows requests from configured origins (configured in Program.cs)
+- Default: `http://localhost:5173` and `http://localhost:5175`
+- **Important**: If frontend runs on a different port, update CORS policy in `Program.cs`
+- See [`TROUBLESHOOTING.md`](TROUBLESHOOTING.md) → CORS Errors for detailed solutions
 
 ## API Endpoints
 
@@ -182,39 +194,43 @@ Authorization: Bearer <jwt_token>
 
 **FIRST: Create a feature design doc in `docs/features/` if this is a significant change!**
 
-Then follow these steps:
+**See [`WORKFLOWS.md`](WORKFLOWS.md) → Backend Development Workflow for complete steps.**
 
-1. **Create Model** in `backend/Models/` with EF Core annotations
-2. **Add DbSet** to `ApplicationDbContext.cs`
-3. **Configure Relationships** in `OnModelCreating()` method
-4. **Create Migration**: `dotnet ef migrations add AddEntityName`
-5. **Apply Migration**: `dotnet ef database update`
-6. **Create DTOs** for request/response in `backend/DTOs/`
-7. **Create Service Interface** and implementation in `backend/Services/`
-8. **Register Service** in `Program.cs` with DI
-9. **Create Controller** in `backend/Controllers/`
+**Quick checklist:**
+1. Create Model in `backend/Models/`
+2. Add DbSet to `ApplicationDbContext.cs`
+3. Configure relationships in `OnModelCreating()`
+4. Create migration: `dotnet ef migrations add AddEntityName`
+5. Apply migration: `dotnet ef database update`
+6. Create DTOs in `backend/DTOs/`
+7. Create Service interface and implementation
+8. **Register Service in `Program.cs`** (commonly forgotten!)
+9. Create Controller in `backend/Controllers/`
+10. Update `backend/API.md`
 
 ### When Adding New API Endpoints
 
 **FIRST: Ensure there's a feature design doc in `docs/features/` for this endpoint!**
 
-Then follow these steps:
+**See [`WORKFLOWS.md`](WORKFLOWS.md) → When Adding New API Endpoints for complete workflow.**
 
-1. Add method to appropriate service interface + implementation
-2. Add controller action with proper HTTP verb attribute (`[HttpGet]`, `[HttpPost]`, etc.)
-3. Add `[Authorize]` attribute unless endpoint should be public
-4. Use DTOs for request/response (never expose Models directly)
-5. Return appropriate status codes (200, 201, 400, 404, 500)
-6. Update `backend/API.md` with endpoint documentation
-7. If no frontend exists yet, mark endpoint as "⚠️ No Frontend Yet" in API.md
-8. Update feature design doc with implementation status
+**Key points:**
+- Use DTOs for request/response (never expose Models directly)
+- Add `[Authorize]` attribute unless endpoint should be public
+- Return appropriate status codes (200, 201, 400, 404, 500)
+- Update `backend/API.md` with documentation
+- Mark as "⚠️ No Frontend Yet" in API.md if no UI exists
+- Add to [`INCOMPLETE_FEATURES.md`](INCOMPLETE_FEATURES.md) if backend-only
 
 ### Frontend API Integration
 
-1. Create service method in appropriate service file (e.g., `vehicleService.js`)
-2. Use the shared `api` instance from `src/services/api.js`
+**See [`WORKFLOWS.md`](WORKFLOWS.md) → Frontend Development Workflow for complete patterns.**
+
+**Key pattern:**
+1. Create service method in `src/services/` (never call axios directly from components)
+2. Use shared `api` instance from `src/services/api.js`
 3. Handle errors with try-catch in components
-4. Show user feedback with Material-UI Snackbar/Alert components
+4. Show user feedback with Material-UI Snackbar/Alert
 
 ### Database Seeding
 
@@ -222,7 +238,7 @@ Then follow these steps:
 - Seed data includes 10 makes and 60+ models
 - To modify seed data, edit `SeedCarMakesAndModels()` method and create migration
 
-## Best Practices & Workflows
+## Development Best Practices
 
 This project is a solo development effort with AI assistance. These practices help maintain code quality and keep the AI effective.
 
@@ -230,168 +246,23 @@ This project is a solo development effort with AI assistance. These practices he
 
 **CRITICAL RULE: A feature is NOT considered complete/implemented until it has BOTH backend AND frontend components.**
 
-- Backend-only APIs without UI are considered **incomplete features**
-- Frontend-only UIs without backend support are considered **incomplete features**
-- Only features with **working end-to-end integration** (backend + frontend + testing) are considered complete
+**See [`INCOMPLETE_FEATURES.md`](INCOMPLETE_FEATURES.md) for tracking incomplete features.**
 
-**Why this matters:**
-- Prevents accumulation of unused backend code
-- Ensures features are actually usable by end users
-- Maintains consistency between API and UI development
-- Helps AI assistants understand what's truly "done" vs "in progress"
+**Key points:**
+- Backend-only APIs without UI = **incomplete**
+- Only features with working end-to-end integration = **complete**
+- Document incomplete features in [`INCOMPLETE_FEATURES.md`](INCOMPLETE_FEATURES.md)
+- Mark backend-only endpoints as "⚠️ No Frontend Yet" in `backend/API.md`
 
-**When documenting features:**
-- Incomplete features must be listed in the "Incomplete Features" section of CLAUDE.md
-- Only remove from incomplete list when both backend and frontend are implemented and tested
-- Update API.md when backend is done, but mark endpoints as "⚠️ No Frontend Yet"
+### Development Workflows
 
-### Feature Design Documentation
-
-**REQUIRED: All new major features MUST have a design document in `docs/features/` BEFORE implementation starts.**
-
-**What requires a design doc:**
-- Features spanning multiple files (3+ files)
-- Features requiring database schema changes
-- Features involving new technologies/libraries
-- Features with multiple implementation phases
-- Any feature estimated at 2+ days of work
-
-**Process:**
-1. **Before coding:** Copy `docs/features/_TEMPLATE.md` to `docs/features/feature-name.md`
-2. **Fill in all sections:** Context, technology decisions, API design, implementation phases, etc.
-3. **Commit the design doc** before starting implementation
-4. **Reference the doc** in commit messages during implementation
-5. **Update status** as phases complete: 🔵 Planning → 🟡 In Progress → ⚠️ Backend Only → ✅ Complete
-6. **Keep it current** - update the doc when requirements change
-
-**Benefits:**
-- Clearer thinking before coding
-- Better time estimates
-- Documentation for future reference
-- AI assistants can follow the plan accurately
-- Easier to pick up work after breaks
-
-**See [`docs/README.md`](docs/README.md) for complete guidelines and templates.**
-
-### Git Workflow
-
-**Branching Strategy:**
-- Create feature branches for significant changes: `feature/add-fuel-ui`, `fix/auth-bug`, `refactor/service-layer`
-- Keeps `main` branch clean and makes it easier to abandon unsuccessful experiments
-- Can push to `main` directly for small fixes; use branches for larger features
-- Delete branches after merging or abandoning
-
-**Commit Practices:**
-- Commit when code works and is tested (not broken code)
-- Clear commit messages describing what and why
-- Test end-to-end before pushing
-
-### Backend Development Workflow
-
-**When Adding/Modifying Database Entities (CRITICAL WORKFLOW):**
-
-This is a common area where AI makes mistakes. Follow these steps in order:
-
-1. Create or update Model in `backend/Models/` with EF Core annotations
-2. Update `ApplicationDbContext.cs`:
-   - Add `DbSet<EntityName>` property if new entity
-   - Configure relationships in `OnModelCreating()` if needed
-3. **Create migration**: `dotnet ef migrations add DescriptiveName`
-4. **Apply migration**: `dotnet ef database update`
-5. Create DTOs in `backend/DTOs/` (request and response DTOs)
-6. Create Service interface in `backend/Services/IEntityService.cs`
-7. Implement Service in `backend/Services/EntityService.cs`
-8. **Register service in `Program.cs`** (AI commonly forgets this step!)
-   ```csharp
-   builder.Services.AddScoped<IEntityService, EntityService>();
-   ```
-9. Create Controller in `backend/Controllers/`
-10. Test with curl or frontend
-11. Update `backend/API.md` with new endpoints
-
-**Critical Backend Rules:**
-
-- **Business logic belongs in Services**, not Controllers (Controllers should be thin routing layers)
-- **Never expose Models directly** - always use DTOs for API requests/responses
-- **Always create migrations** after model changes (don't skip this!)
-- **Always register new services** in `Program.cs` DI container
-- **Add `[Authorize]` attribute** to all endpoints except login/register
-- **Return proper HTTP status codes**: 200 (OK), 201 (Created), 400 (Bad Request), 404 (Not Found), 500 (Server Error)
-- **Validate inputs** using Data Annotations in DTOs
-
-**Common AI Mistakes on Backend:**
-- ❌ Forgetting to create migration after model changes
-- ❌ Not registering new services in `Program.cs` DI container
-- ❌ Putting business logic in Controllers instead of Services
-- ❌ Exposing Models directly instead of using DTOs
-- ❌ Modifying existing migrations (always create new ones)
-- ❌ Not adding `[Authorize]` to protected endpoints
-
-### Frontend Development Workflow
-
-**When Adding Features:**
-
-1. API calls must go through service layer (`src/services/`), **never call axios directly in components**
-2. Use `AuthContext` for authentication state
-3. Forms must use React Hook Form + Yup for validation
-4. Show loading states for async operations
-5. Display user-friendly error messages using Material-UI Snackbar/Alert
-
-**Frontend Patterns to Follow:**
-
-- Protected pages wrapped in `<ProtectedRoute>`
-- Service files return `response.data`, not the full axios response
-- JWT token handled automatically by axios interceptors in `api.js`
-- Use try-catch blocks for API calls in components
-- Clear error messages for users (not raw error objects)
-
-**Common AI Mistakes on Frontend:**
-- ❌ Calling axios directly from components (use service layer)
-- ❌ Not showing loading states during async operations
-- ❌ Exposing technical errors to users
-- ❌ Not using React Hook Form for complex forms
-- ❌ Breaking the service layer pattern
-
-### Before Committing - AI Checklist
-
-Run through this checklist before every commit:
-
-**Must Verify:**
-- [ ] If database models changed: migration created AND applied
-- [ ] If new service created: registered in `Program.cs` DI container
-- [ ] Backend compiles: `cd backend && dotnet build`
-- [ ] Frontend lints: `cd web-frontend && npm run lint`
-- [ ] Tested end-to-end (both UI and API working together)
-- [ ] `backend/API.md` updated if endpoints changed
-- [ ] No console errors in browser developer tools
-- [ ] No exceptions in backend console output
-
-**Common Checks:**
-- Backend running on correct port (5239)
-- Frontend running on correct port (5173)
-- CORS configured for frontend URL
-- JWT token being sent in requests (check Network tab)
-- Database file exists and has tables
-
-### Database & Migration Best Practices
-
-**Migration Workflow:**
-- **Never modify existing migrations** that have been committed - create new ones instead
-- Test migrations locally before committing
-- Backup database before major schema changes: `cp backend/carmanagement.db backend/carmanagement.db.backup`
-- If migration fails, rollback and fix:
-  ```bash
-  dotnet ef database update PreviousMigrationName
-  dotnet ef migrations remove
-  # Fix the issue, then create new migration
-  dotnet ef migrations add FixedMigrationName
-  dotnet ef database update
-  ```
-
-**Database Maintenance:**
-- SQLite database file: `backend/carmanagement.db`
-- Connection string in `backend/appsettings.json`
-- To reset database completely: delete file and run `dotnet ef database update`
+**See [`WORKFLOWS.md`](WORKFLOWS.md) for complete workflows including:**
+- Feature Design Documentation process
+- Git workflow and branching strategy
+- Backend development workflow (entities, migrations, services)
+- Frontend development workflow (components, services, API integration)
+- Before Committing - AI Checklist
+- Database & migration best practices
 
 ### Security Best Practices
 
@@ -407,6 +278,45 @@ Run through this checklist before every commit:
 - Token automatically included in requests via axios interceptor
 - 401 responses automatically clear token and redirect to login
 - Token expiration: 1 hour (configurable in `appsettings.json`)
+
+## Testing & Debugging
+
+**See [`TESTING.md`](TESTING.md) for complete testing documentation including:**
+- Running automated backend tests (xUnit integration tests)
+- Manual testing procedures (full flow, API with curl)
+- Writing new tests (patterns and examples)
+- Test coverage details (13 tests, all passing)
+
+**See [`TROUBLESHOOTING.md`](TROUBLESHOOTING.md) for debugging help:**
+- Port conflicts
+- Database issues
+- Authentication problems
+- CORS errors
+- Build and compilation errors
+- API communication issues
+
+**Quick test command:**
+```bash
+cd backend/Backend.Tests && dotnet test
+```
+
+## Development Notes
+
+### Adding Copilot/AI Instructions
+
+Copilot instructions are in `.github/copilot-instructions.md`. Key points from those instructions:
+- Backend uses service layer pattern (Controllers delegate to Services)
+- JWT auth required for all endpoints except login/register
+- Auto-calculations happen in backend services (fuel efficiency, mileage updates)
+- Frontend uses AuthContext and protected routes
+- API URL configurable via environment variables
+
+### Mobile Development
+
+Mobile frontend is currently a basic React Native setup. The structure follows standard React Native patterns:
+- Start Metro bundler first: `npm start`
+- Run platform-specific commands in separate terminal
+- iOS requires CocoaPods setup: `bundle install && bundle exec pod install`
 
 ### Code Quality & Consistency
 
@@ -429,211 +339,20 @@ Run through this checklist before every commit:
 - Document required vs optional fields
 - Note authorization requirements
 
-## Automated Testing
+## Incomplete Features Tracker
 
-### Backend Integration Tests
+**See [`INCOMPLETE_FEATURES.md`](INCOMPLETE_FEATURES.md) for complete tracking of features that have backend implementation but no frontend UI.**
 
-**Test Project Location:** `backend/Backend.Tests/`
+**Process for managing incomplete features:**
+- When implementing backend-only APIs, add to [`INCOMPLETE_FEATURES.md`](INCOMPLETE_FEATURES.md)
+- Mark endpoints as "⚠️ No Frontend Yet" in [`backend/API.md`](backend/API.md)
+- Remove from incomplete list only when fully functional end-to-end (backend + frontend + testing)
 
-**Running Tests:**
-```bash
-cd backend/Backend.Tests
-dotnet test                    # Run all tests
-dotnet test --verbosity normal # Run with detailed output
-dotnet test --filter "FullyQualifiedName~Authentication"  # Run specific test class
-```
-
-**Test Infrastructure:**
-- **xUnit** testing framework
-- **WebApplicationFactory** for integration testing
-- **In-Memory Database** automatically used in Testing environment
-- Tests run against real API with isolated database per test run
-
-**Current Test Coverage (13 tests - All Passing ✅):**
-
-*Authentication Tests (6):*
-- Register with valid data returns token and user
-- Register with duplicate username returns bad request
-- Login with valid credentials returns token
-- Login with invalid password returns unauthorized
-- Get current user with valid token returns user data
-- Get current user without token returns unauthorized
-
-*Vehicle Tests (7):*
-- Create vehicle with valid data returns created vehicle
-- Create vehicle without token returns unauthorized
-- Get vehicles returns only user's vehicles (authorization)
-- Get vehicle by ID returns vehicle
-- Update vehicle with valid data returns updated vehicle
-- Delete vehicle with valid ID returns no content
-- Delete vehicle of another user returns not found (authorization)
-
-**Writing New Tests:**
-
-When adding new features, follow this pattern:
-
-```csharp
-public class NewFeatureTests : IClassFixture<TestWebApplicationFactory>
-{
-    private readonly HttpClient _client;
-
-    public NewFeatureTests(TestWebApplicationFactory factory)
-    {
-        _client = factory.CreateClient();
-    }
-
-    [Fact]
-    public async Task Feature_WithValidInput_ReturnsExpectedResult()
-    {
-        // Arrange
-        var request = new { /* test data */ };
-
-        // Act
-        var response = await _client.PostAsJsonAsync("/api/endpoint", request);
-
-        // Assert
-        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
-    }
-}
-```
-
-**Important Testing Notes:**
-- Each test gets a fresh in-memory database (isolation)
-- Test environment automatically set via `TestWebApplicationFactory`
-- No need to manually configure database - handled by Program.cs
-- Authorization tests verify users can only access their own data
-- Backend returns 404 (not 403) for unauthorized access (security best practice)
-
-**Before Committing Code:**
-```bash
-# Always run tests before pushing
-cd backend/Backend.Tests && dotnet test
-# All tests must pass
-```
-
-**Before Starting New Features:**
-```bash
-# Create feature design document
-cp docs/features/_TEMPLATE.md docs/features/my-feature-name.md
-# Fill in all sections before coding
-# Commit the design doc first
-git add docs/features/my-feature-name.md
-git commit -m "Add design doc for [feature name]"
-```
-
-## Testing the Application Manually
-
-### Full Flow Test
-1. Start backend: `cd backend && dotnet run`
-2. Start frontend: `cd web-frontend && npm run dev`
-3. Open `http://localhost:5173`
-4. Register new account
-5. Add a vehicle
-6. View vehicle details
-
-### API Testing with curl
-See `GETTING_STARTED.md` for complete curl examples including:
-- Register/login flow
-- Creating vehicles with authentication
-- Fetching user data
-
-### Troubleshooting
-
-**Port conflicts:**
-```bash
-# Kill backend process (port 5239)
-lsof -ti:5239 | xargs kill -9
-
-# Kill frontend process (port 5173)
-lsof -ti:5173 | xargs kill -9
-```
-
-**Database corruption:**
-```bash
-# Delete and recreate database
-rm backend/carmanagement.db
-cd backend && dotnet ef database update
-```
-
-**Authentication issues:**
-- Clear browser localStorage to remove stale tokens
-- Verify JWT Secret in `appsettings.json` is at least 32 characters
-- Check token expiration in `appsettings.json` (default: 1 hour)
-
-**401 Unauthorized errors:**
-- Verify token is being sent in Authorization header
-- Check token hasn't expired
-- Ensure user making request owns the resource (vehicles, records)
-
-**CORS errors (Origin not allowed):**
-- **Symptom**: Browser console shows "Origin http://localhost:XXXX is not allowed by Access-Control-Allow-Origin"
-- **Cause**: Frontend port doesn't match the allowed origins in backend CORS configuration
-- **Solution**:
-  1. Check which port the frontend is running on (look at the Vite dev server output)
-  2. Update `backend/Program.cs` line 62 to include that port: `policy.WithOrigins("http://localhost:5173", "http://localhost:XXXX")`
-  3. Restart the backend: `cd backend && dotnet run`
-- **Note**: Vite uses port 5173 by default, but will automatically use 5175, 5176, etc. if 5173 is already in use
-
-## Development Notes
-
-### Adding Copilot/AI Instructions
-
-Copilot instructions are in `.github/copilot-instructions.md`. Key points from those instructions:
-- Backend uses service layer pattern (Controllers delegate to Services)
-- JWT auth required for all endpoints except login/register
-- Auto-calculations happen in backend services (fuel efficiency, mileage updates)
-- Frontend uses AuthContext and protected routes
-- API URL configurable via environment variables
-
-### Mobile Development
-
-Mobile frontend is currently a basic React Native setup. The structure follows standard React Native patterns:
-- Start Metro bundler first: `npm start`
-- Run platform-specific commands in separate terminal
-- iOS requires CocoaPods setup: `bundle install && bundle exec pod install`
-
-## Incomplete Features (Backend Only)
-
-These features have backend API implementations but are **NOT yet complete** because they lack frontend UI. They cannot be used by end users until the frontend is implemented.
-
-### Vehicle Registration Document Upload
-
-**Status:** ⚠️ Backend Only - No Frontend
-
-**Design Doc:** [`docs/features/vehicle-registration-ocr.md`](docs/features/vehicle-registration-ocr.md)
-
-**What exists (Backend):**
-- Backend API endpoints in `VehicleRegistrationController.cs`:
-  - `POST /api/vehicle-registration/extract` - OCR extraction from registration documents
-  - `POST /api/vehicle-registration/upload/{vehicleId}` - Upload registration document
-- OCR service using Tesseract (`TesseractOcrService.cs`)
-- Registration parser service (`RegistrationParserService.cs`)
-- File storage service (`LocalFileStorageService.cs`)
-- DTOs: `RegistrationExtractResponse`, `ExtractedFieldDto`
-- Database migration: Vehicle model includes registration fields
-- Documented in `backend/API.md` (marked as "⚠️ No Frontend Yet")
-
-**What's missing (Frontend):**
-- Web frontend UI for uploading registration documents
-- File upload component with drag-and-drop
-- Preview of extracted OCR data
-- Form integration to pre-fill vehicle fields from extracted data
-- Error handling and user feedback in UI
-
-**What's missing (Testing):**
-- Integration tests for registration endpoints
-- End-to-end testing with sample documents
-
-**Next steps:**
-See the complete implementation plan in [`docs/features/vehicle-registration-ocr.md`](docs/features/vehicle-registration-ocr.md) → Phase 6 & 7
-
-### Future Enhancements (Not Yet Implemented)
-
-Based on `README.md`, planned features include:
-- Service Records UI (Phase 5)
-- Fuel Records UI (Phase 6)
+**Planned future enhancements:**
+- Service Records UI
+- Fuel Records UI
 - Insurance management
 - Expense analytics dashboard
 - Reminders and notifications
 
-When implementing these, follow existing patterns for Vehicle management.
+See [`INCOMPLETE_FEATURES.md`](INCOMPLETE_FEATURES.md) for detailed status and implementation plans.
