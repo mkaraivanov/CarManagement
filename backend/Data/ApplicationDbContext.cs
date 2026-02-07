@@ -16,6 +16,10 @@ public class ApplicationDbContext : DbContext
     public DbSet<FuelRecord> FuelRecords { get; set; } = null!;
     public DbSet<CarMake> CarMakes { get; set; } = null!;
     public DbSet<CarModel> CarModels { get; set; } = null!;
+    public DbSet<MaintenanceTemplate> MaintenanceTemplates { get; set; } = null!;
+    public DbSet<MaintenanceSchedule> MaintenanceSchedules { get; set; } = null!;
+    public DbSet<Reminder> Reminders { get; set; } = null!;
+    public DbSet<Notification> Notifications { get; set; } = null!;
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -71,8 +75,80 @@ public class ApplicationDbContext : DbContext
                 .OnDelete(DeleteBehavior.Cascade);
         });
 
+        // MaintenanceTemplate configuration
+        modelBuilder.Entity<MaintenanceTemplate>(entity =>
+        {
+            entity.HasOne(mt => mt.User)
+                .WithMany()
+                .HasForeignKey(mt => mt.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasIndex(e => e.Name);
+            entity.HasIndex(e => e.Category);
+        });
+
+        // MaintenanceSchedule configuration
+        modelBuilder.Entity<MaintenanceSchedule>(entity =>
+        {
+            entity.HasOne(ms => ms.Vehicle)
+                .WithMany(v => v.MaintenanceSchedules)
+                .HasForeignKey(ms => ms.VehicleId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(ms => ms.Template)
+                .WithMany(t => t.MaintenanceSchedules)
+                .HasForeignKey(ms => ms.TemplateId)
+                .OnDelete(DeleteBehavior.SetNull);
+
+            entity.HasOne(ms => ms.LastServiceRecord)
+                .WithMany()
+                .HasForeignKey(ms => ms.LastServiceRecordId)
+                .OnDelete(DeleteBehavior.SetNull);
+
+            entity.HasIndex(e => e.IsActive);
+            entity.HasIndex(e => e.NextDueDate);
+        });
+
+        // Reminder configuration
+        modelBuilder.Entity<Reminder>(entity =>
+        {
+            entity.HasOne(r => r.MaintenanceSchedule)
+                .WithMany(ms => ms.Reminders)
+                .HasForeignKey(r => r.MaintenanceScheduleId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(r => r.User)
+                .WithMany()
+                .HasForeignKey(r => r.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasIndex(e => e.Status);
+            entity.HasIndex(e => e.ScheduledDate);
+        });
+
+        // Notification configuration
+        modelBuilder.Entity<Notification>(entity =>
+        {
+            entity.HasOne(n => n.User)
+                .WithMany()
+                .HasForeignKey(n => n.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(n => n.Reminder)
+                .WithMany(r => r.Notifications)
+                .HasForeignKey(n => n.ReminderId)
+                .OnDelete(DeleteBehavior.SetNull);
+
+            entity.HasIndex(e => e.Status);
+            entity.HasIndex(e => e.Channel);
+            entity.HasIndex(e => e.CreatedAt);
+        });
+
         // Seed data for car makes and models
         SeedCarMakesAndModels(modelBuilder);
+
+        // Seed data for system maintenance templates
+        SeedMaintenanceTemplates(modelBuilder);
     }
 
     private void SeedCarMakesAndModels(ModelBuilder modelBuilder)
@@ -180,5 +256,260 @@ public class ApplicationDbContext : DbContext
         };
 
         modelBuilder.Entity<CarModel>().HasData(models);
+    }
+
+    private void SeedMaintenanceTemplates(ModelBuilder modelBuilder)
+    {
+        var seedDate = new DateTime(2026, 2, 7, 0, 0, 0, DateTimeKind.Utc);
+        var templates = new List<MaintenanceTemplate>
+        {
+            // Engine Maintenance
+            new MaintenanceTemplate
+            {
+                Id = Guid.Parse("00000000-0000-0000-0000-000000000001"),
+                Name = "Oil Change",
+                Description = "Regular oil and filter change",
+                Category = "Engine",
+                IsSystemTemplate = true,
+                DefaultIntervalMonths = 6,
+                DefaultIntervalKilometers = 10000,
+                UseCompoundRule = true,
+                CreatedAt = seedDate
+            },
+            new MaintenanceTemplate
+            {
+                Id = Guid.Parse("00000000-0000-0000-0000-000000000002"),
+                Name = "Oil Filter Replacement",
+                Description = "Replace engine oil filter",
+                Category = "Engine",
+                IsSystemTemplate = true,
+                DefaultIntervalMonths = 6,
+                DefaultIntervalKilometers = 10000,
+                UseCompoundRule = true,
+                CreatedAt = seedDate
+            },
+            new MaintenanceTemplate
+            {
+                Id = Guid.Parse("00000000-0000-0000-0000-000000000003"),
+                Name = "Air Filter Replacement",
+                Description = "Replace engine air filter",
+                Category = "Engine",
+                IsSystemTemplate = true,
+                DefaultIntervalMonths = 12,
+                DefaultIntervalKilometers = 20000,
+                UseCompoundRule = true,
+                CreatedAt = seedDate
+            },
+            new MaintenanceTemplate
+            {
+                Id = Guid.Parse("00000000-0000-0000-0000-000000000004"),
+                Name = "Spark Plugs Replacement",
+                Description = "Replace spark plugs",
+                Category = "Engine",
+                IsSystemTemplate = true,
+                DefaultIntervalMonths = 24,
+                DefaultIntervalKilometers = 50000,
+                UseCompoundRule = true,
+                CreatedAt = seedDate
+            },
+            new MaintenanceTemplate
+            {
+                Id = Guid.Parse("00000000-0000-0000-0000-000000000005"),
+                Name = "Timing Belt Replacement",
+                Description = "Replace timing belt",
+                Category = "Engine",
+                IsSystemTemplate = true,
+                DefaultIntervalMonths = 60,
+                DefaultIntervalKilometers = 100000,
+                UseCompoundRule = true,
+                CreatedAt = seedDate
+            },
+
+            // Tires & Wheels
+            new MaintenanceTemplate
+            {
+                Id = Guid.Parse("00000000-0000-0000-0000-000000000006"),
+                Name = "Tire Rotation",
+                Description = "Rotate tires for even wear",
+                Category = "Tires",
+                IsSystemTemplate = true,
+                DefaultIntervalMonths = 6,
+                DefaultIntervalKilometers = 10000,
+                UseCompoundRule = true,
+                CreatedAt = seedDate
+            },
+            new MaintenanceTemplate
+            {
+                Id = Guid.Parse("00000000-0000-0000-0000-000000000007"),
+                Name = "Tire Replacement",
+                Description = "Replace worn tires",
+                Category = "Tires",
+                IsSystemTemplate = true,
+                DefaultIntervalMonths = 48,
+                DefaultIntervalKilometers = 60000,
+                UseCompoundRule = true,
+                CreatedAt = seedDate
+            },
+            new MaintenanceTemplate
+            {
+                Id = Guid.Parse("00000000-0000-0000-0000-000000000008"),
+                Name = "Wheel Alignment",
+                Description = "Check and adjust wheel alignment",
+                Category = "Tires",
+                IsSystemTemplate = true,
+                DefaultIntervalMonths = 12,
+                DefaultIntervalKilometers = 20000,
+                UseCompoundRule = true,
+                CreatedAt = seedDate
+            },
+            new MaintenanceTemplate
+            {
+                Id = Guid.Parse("00000000-0000-0000-0000-000000000009"),
+                Name = "Tire Pressure Check",
+                Description = "Check and adjust tire pressure",
+                Category = "Tires",
+                IsSystemTemplate = true,
+                DefaultIntervalMonths = 1,
+                DefaultIntervalKilometers = 2000,
+                UseCompoundRule = true,
+                CreatedAt = seedDate
+            },
+
+            // Brakes
+            new MaintenanceTemplate
+            {
+                Id = Guid.Parse("00000000-0000-0000-0000-000000000010"),
+                Name = "Brake Pad Inspection",
+                Description = "Inspect brake pads and rotors",
+                Category = "Brakes",
+                IsSystemTemplate = true,
+                DefaultIntervalMonths = 12,
+                DefaultIntervalKilometers = 20000,
+                UseCompoundRule = true,
+                CreatedAt = seedDate
+            },
+            new MaintenanceTemplate
+            {
+                Id = Guid.Parse("00000000-0000-0000-0000-000000000011"),
+                Name = "Brake Fluid Replacement",
+                Description = "Flush and replace brake fluid",
+                Category = "Brakes",
+                IsSystemTemplate = true,
+                DefaultIntervalMonths = 24,
+                DefaultIntervalKilometers = 40000,
+                UseCompoundRule = true,
+                CreatedAt = seedDate
+            },
+
+            // Fluids
+            new MaintenanceTemplate
+            {
+                Id = Guid.Parse("00000000-0000-0000-0000-000000000012"),
+                Name = "Coolant Flush",
+                Description = "Flush and replace engine coolant",
+                Category = "Fluids",
+                IsSystemTemplate = true,
+                DefaultIntervalMonths = 24,
+                DefaultIntervalKilometers = 40000,
+                UseCompoundRule = true,
+                CreatedAt = seedDate
+            },
+            new MaintenanceTemplate
+            {
+                Id = Guid.Parse("00000000-0000-0000-0000-000000000013"),
+                Name = "Transmission Fluid Change",
+                Description = "Change transmission fluid",
+                Category = "Fluids",
+                IsSystemTemplate = true,
+                DefaultIntervalMonths = 48,
+                DefaultIntervalKilometers = 80000,
+                UseCompoundRule = true,
+                CreatedAt = seedDate
+            },
+            new MaintenanceTemplate
+            {
+                Id = Guid.Parse("00000000-0000-0000-0000-000000000014"),
+                Name = "Power Steering Fluid",
+                Description = "Check and replace power steering fluid",
+                Category = "Fluids",
+                IsSystemTemplate = true,
+                DefaultIntervalMonths = 24,
+                DefaultIntervalKilometers = 40000,
+                UseCompoundRule = true,
+                CreatedAt = seedDate
+            },
+
+            // Inspections
+            new MaintenanceTemplate
+            {
+                Id = Guid.Parse("00000000-0000-0000-0000-000000000015"),
+                Name = "Annual Safety Inspection",
+                Description = "Comprehensive vehicle safety inspection",
+                Category = "Inspection",
+                IsSystemTemplate = true,
+                DefaultIntervalMonths = 12,
+                UseCompoundRule = false,
+                CreatedAt = seedDate
+            },
+            new MaintenanceTemplate
+            {
+                Id = Guid.Parse("00000000-0000-0000-0000-000000000016"),
+                Name = "Emission Test",
+                Description = "Emission test and certification",
+                Category = "Inspection",
+                IsSystemTemplate = true,
+                DefaultIntervalMonths = 24,
+                UseCompoundRule = false,
+                CreatedAt = seedDate
+            },
+            new MaintenanceTemplate
+            {
+                Id = Guid.Parse("00000000-0000-0000-0000-000000000017"),
+                Name = "Battery Check",
+                Description = "Test battery and charging system",
+                Category = "Inspection",
+                IsSystemTemplate = true,
+                DefaultIntervalMonths = 12,
+                UseCompoundRule = false,
+                CreatedAt = seedDate
+            },
+
+            // Equipment/Commercial (Engine Hours)
+            new MaintenanceTemplate
+            {
+                Id = Guid.Parse("00000000-0000-0000-0000-000000000018"),
+                Name = "Oil Change - Heavy Equipment",
+                Description = "Oil change for heavy equipment based on engine hours",
+                Category = "Equipment",
+                IsSystemTemplate = true,
+                DefaultIntervalHours = 250,
+                UseCompoundRule = false,
+                CreatedAt = seedDate
+            },
+            new MaintenanceTemplate
+            {
+                Id = Guid.Parse("00000000-0000-0000-0000-000000000019"),
+                Name = "Hydraulic Fluid Change",
+                Description = "Change hydraulic fluid for equipment",
+                Category = "Equipment",
+                IsSystemTemplate = true,
+                DefaultIntervalHours = 500,
+                UseCompoundRule = false,
+                CreatedAt = seedDate
+            },
+            new MaintenanceTemplate
+            {
+                Id = Guid.Parse("00000000-0000-0000-0000-000000000020"),
+                Name = "Air Filter - Equipment",
+                Description = "Replace air filter on heavy equipment",
+                Category = "Equipment",
+                IsSystemTemplate = true,
+                DefaultIntervalHours = 100,
+                UseCompoundRule = false,
+                CreatedAt = seedDate
+            }
+        };
+
+        modelBuilder.Entity<MaintenanceTemplate>().HasData(templates);
     }
 }

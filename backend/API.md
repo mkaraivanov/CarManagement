@@ -269,6 +269,299 @@ Authorization: Bearer <token>
 
 ---
 
+## 🔔 Preventive Maintenance Endpoints
+
+### Maintenance Templates
+
+#### Get All Templates
+```http
+GET /api/maintenance-templates
+Authorization: Bearer <token>
+```
+Returns all system templates and user's custom templates.
+
+**Response 200:** Array of templates
+
+#### Get System Templates Only
+```http
+GET /api/maintenance-templates/system
+Authorization: Bearer <token>
+```
+Returns only pre-defined system templates (20 templates across 6 categories).
+
+#### Get Templates by Category
+```http
+GET /api/maintenance-templates/category/{category}
+Authorization: Bearer <token>
+```
+**Categories:** Engine, Tires, Brakes, Fluids, Inspection, Equipment
+
+#### Get Template Categories
+```http
+GET /api/maintenance-templates/categories
+Authorization: Bearer <token>
+```
+Returns list of all template categories.
+
+#### Get Template by ID
+```http
+GET /api/maintenance-templates/{id}
+Authorization: Bearer <token>
+```
+
+#### Create Custom Template
+```http
+POST /api/maintenance-templates
+Authorization: Bearer <token>
+Content-Type: application/json
+
+{
+  "name": "string",
+  "description": "string (optional)",
+  "category": "string",
+  "defaultIntervalMonths": number (optional),
+  "defaultIntervalKilometers": number (optional),
+  "defaultIntervalHours": number (optional),
+  "useCompoundRule": boolean
+}
+```
+**useCompoundRule:** `true` = OR logic (whichever first), `false` = AND logic (all conditions)
+
+#### Update Custom Template
+```http
+PUT /api/maintenance-templates/{id}
+Authorization: Bearer <token>
+Content-Type: application/json
+
+{
+  // All fields optional
+  "name": "string",
+  "defaultIntervalMonths": number,
+  ...
+}
+```
+**Note:** Only user-created templates can be updated (not system templates)
+
+#### Delete Custom Template
+```http
+DELETE /api/maintenance-templates/{id}
+Authorization: Bearer <token>
+```
+**Note:** Only user-created templates can be deleted (not system templates)
+
+---
+
+### Maintenance Schedules
+
+#### Get Schedules for Vehicle
+```http
+GET /api/maintenance-schedules/vehicle/{vehicleId}
+Authorization: Bearer <token>
+```
+Returns all maintenance schedules for a vehicle with calculated status.
+
+**Response 200:**
+```json
+[
+  {
+    "id": "guid",
+    "vehicleId": "guid",
+    "templateId": "guid",
+    "taskName": "Oil Change",
+    "category": "Engine",
+    "intervalMonths": 6,
+    "intervalKilometers": 10000,
+    "useCompoundRule": true,
+    "lastCompletedDate": "2026-01-15",
+    "lastCompletedMileage": 50000,
+    "nextDueDate": "2026-07-15",
+    "nextDueMileage": 60000,
+    "daysUntilDue": 158,
+    "kilometersUntilDue": 10000,
+    "isOverdue": false,
+    "isUpcoming": false,
+    "status": "OK",
+    "isActive": true
+  }
+]
+```
+
+#### Get Schedule by ID
+```http
+GET /api/maintenance-schedules/{id}
+Authorization: Bearer <token>
+```
+
+#### Get Overdue Schedules
+```http
+GET /api/maintenance-schedules/overdue
+Authorization: Bearer <token>
+```
+Returns all overdue schedules across all user's vehicles.
+
+#### Get Upcoming Schedules
+```http
+GET /api/maintenance-schedules/upcoming
+Authorization: Bearer <token>
+```
+Returns schedules within reminder threshold (default: 30 days or 1,000 km).
+
+#### Create Schedule
+```http
+POST /api/maintenance-schedules
+Authorization: Bearer <token>
+Content-Type: application/json
+
+{
+  "vehicleId": "guid",
+  "templateId": "guid (optional)",
+  "taskName": "string",
+  "description": "string (optional)",
+  "category": "string (optional)",
+  "intervalMonths": number (optional),
+  "intervalKilometers": number (optional),
+  "intervalHours": number (optional),
+  "useCompoundRule": boolean,
+  "lastCompletedDate": "datetime (optional)",
+  "lastCompletedMileage": number (optional)",
+  "lastCompletedHours": number (optional)",
+  "reminderDaysBefore": 30,
+  "reminderKilometersBefore": 1000,
+  "reminderHoursBefore": 10
+}
+```
+**✨ Auto-Calculations:** Next due dates calculated automatically based on intervals
+
+#### Update Schedule
+```http
+PUT /api/maintenance-schedules/{id}
+Authorization: Bearer <token>
+Content-Type: application/json
+
+{
+  // All fields optional
+  "taskName": "string",
+  "intervalMonths": number,
+  "isActive": boolean,
+  ...
+}
+```
+
+#### Delete Schedule
+```http
+DELETE /api/maintenance-schedules/{id}
+Authorization: Bearer <token>
+```
+
+#### Complete Schedule
+```http
+POST /api/maintenance-schedules/{id}/complete
+Authorization: Bearer <token>
+Content-Type: application/json
+
+{
+  "completedDate": "datetime",
+  "completedMileage": number,
+  "completedHours": number (optional),
+  "serviceRecordId": "guid (optional)"
+}
+```
+**✨ Auto-Updates:** Recalculates next due dates based on completion data
+
+#### Link Service Record to Schedule
+```http
+POST /api/maintenance-schedules/{id}/link-service/{serviceRecordId}
+Authorization: Bearer <token>
+```
+Links an existing service record and marks the schedule as completed.
+
+#### Recalculate Next Due Dates
+```http
+POST /api/maintenance-schedules/{id}/recalculate
+Authorization: Bearer <token>
+```
+Manually recalculate next due dates for a schedule.
+
+#### Recalculate for All Vehicle Schedules
+```http
+POST /api/maintenance-schedules/vehicle/{vehicleId}/recalculate
+Authorization: Bearer <token>
+```
+Recalculate next due dates for all schedules of a vehicle.
+
+---
+
+### Notifications
+
+#### Get All Notifications
+```http
+GET /api/notifications?limit=50
+Authorization: Bearer <token>
+```
+Returns user's notifications (default: 50 most recent).
+
+#### Get Unread Notifications
+```http
+GET /api/notifications/unread
+Authorization: Bearer <token>
+```
+
+#### Get Notification Count
+```http
+GET /api/notifications/count
+Authorization: Bearer <token>
+```
+
+**Response 200:**
+```json
+{
+  "totalCount": 15,
+  "unreadCount": 3
+}
+```
+
+#### Get Notification by ID
+```http
+GET /api/notifications/{id}
+Authorization: Bearer <token>
+```
+
+#### Mark Notification as Read
+```http
+POST /api/notifications/{id}/read
+Authorization: Bearer <token>
+```
+
+#### Mark All Notifications as Read
+```http
+POST /api/notifications/read-all
+Authorization: Bearer <token>
+```
+
+#### Delete Notification
+```http
+DELETE /api/notifications/{id}
+Authorization: Bearer <token>
+```
+
+---
+
+### Maintenance Status Codes
+
+- **"OK"** - Maintenance not due yet
+- **"Due Soon"** - Within reminder threshold
+- **"Overdue"** - Past due date/mileage/hours
+
+### Background Job
+
+A background service runs **daily at midnight UTC** to:
+- Check all active schedules
+- Create reminders for overdue/upcoming maintenance
+- Generate notifications (in-app, email, push)
+- Clean up old reminders (90 days) and notifications (30 days)
+
+---
+
 ## 🧪 Testing Examples
 
 ### Complete User Flow
@@ -303,6 +596,68 @@ curl -X POST http://localhost:5239/api/vehicles/{vehicleId}/fuel-records \
 
 # 6. Get Fuel Efficiency
 curl http://localhost:5239/api/vehicles/{vehicleId}/fuel-efficiency \
+  -H "Authorization: Bearer $TOKEN"
+```
+
+### Preventive Maintenance Flow
+```bash
+# 1. Get system templates
+curl http://localhost:5239/api/maintenance-templates/system \
+  -H "Authorization: Bearer $TOKEN"
+
+# 2. Get template categories
+curl http://localhost:5239/api/maintenance-templates/categories \
+  -H "Authorization: Bearer $TOKEN"
+
+# 3. Create maintenance schedule from template
+curl -X POST http://localhost:5239/api/maintenance-schedules \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "vehicleId": "{vehicleId}",
+    "templateId": "00000000-0000-0000-0000-000000000001",
+    "taskName": "Oil Change",
+    "intervalMonths": 6,
+    "intervalKilometers": 10000,
+    "useCompoundRule": true,
+    "lastCompletedDate": "2026-01-15",
+    "lastCompletedMileage": 50000,
+    "reminderDaysBefore": 30,
+    "reminderKilometersBefore": 1000
+  }'
+
+# 4. Get vehicle's maintenance schedules
+curl http://localhost:5239/api/maintenance-schedules/vehicle/{vehicleId} \
+  -H "Authorization: Bearer $TOKEN"
+
+# 5. Get overdue schedules
+curl http://localhost:5239/api/maintenance-schedules/overdue \
+  -H "Authorization: Bearer $TOKEN"
+
+# 6. Get upcoming schedules
+curl http://localhost:5239/api/maintenance-schedules/upcoming \
+  -H "Authorization: Bearer $TOKEN"
+
+# 7. Complete a maintenance schedule
+curl -X POST http://localhost:5239/api/maintenance-schedules/{scheduleId}/complete \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "completedDate": "2026-02-07",
+    "completedMileage": 55000,
+    "serviceRecordId": "{serviceRecordId}"
+  }'
+
+# 8. Get notifications
+curl http://localhost:5239/api/notifications \
+  -H "Authorization: Bearer $TOKEN"
+
+# 9. Get unread notification count
+curl http://localhost:5239/api/notifications/count \
+  -H "Authorization: Bearer $TOKEN"
+
+# 10. Mark notification as read
+curl -X POST http://localhost:5239/api/notifications/{notificationId}/read \
   -H "Authorization: Bearer $TOKEN"
 ```
 

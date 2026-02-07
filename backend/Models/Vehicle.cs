@@ -86,6 +86,12 @@ public class Vehicle
 
     public int? Seats { get; set; }
 
+    // Engine hours tracking (for commercial vehicles/equipment)
+    [Column(TypeName = "decimal(10, 2)")]
+    public decimal? CurrentEngineHours { get; set; }
+
+    public DateTime? EngineHoursLastUpdated { get; set; }
+
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
     public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
@@ -94,4 +100,5 @@ public class Vehicle
     public virtual User User { get; set; } = null!;
     public virtual ICollection<ServiceRecord> ServiceRecords { get; set; } = new List<ServiceRecord>();
     public virtual ICollection<FuelRecord> FuelRecords { get; set; } = new List<FuelRecord>();
+    public virtual ICollection<MaintenanceSchedule> MaintenanceSchedules { get; set; } = new List<MaintenanceSchedule>();
 }

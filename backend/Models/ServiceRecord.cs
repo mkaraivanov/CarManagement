@@ -28,6 +28,9 @@ public class ServiceRecord
     [Required]
     public int MileageAtService { get; set; }
 
+    [Column(TypeName = "decimal(10, 2)")]
+    public decimal? EngineHoursAtService { get; set; }
+
     [Required]
     public ServiceType ServiceType { get; set; }
 

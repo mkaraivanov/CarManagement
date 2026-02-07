@@ -55,6 +55,16 @@ builder.Services.AddScoped<Backend.Services.IFileStorageService, Backend.Service
 builder.Services.AddScoped<Backend.Services.IOcrService, Backend.Services.TesseractOcrService>();
 builder.Services.AddScoped<Backend.Services.RegistrationParserService>();
 
+// Register preventive maintenance services
+builder.Services.AddScoped<Backend.Services.IMaintenanceCalculationService, Backend.Services.MaintenanceCalculationService>();
+builder.Services.AddScoped<Backend.Services.IMaintenanceTemplateService, Backend.Services.MaintenanceTemplateService>();
+builder.Services.AddScoped<Backend.Services.IMaintenanceScheduleService, Backend.Services.MaintenanceScheduleService>();
+builder.Services.AddScoped<Backend.Services.IReminderService, Backend.Services.ReminderService>();
+builder.Services.AddScoped<Backend.Services.INotificationService, Backend.Services.NotificationService>();
+
+// Register background service for preventive maintenance checks
+builder.Services.AddHostedService<Backend.Services.MaintenanceBackgroundService>();
+
 // Add CORS policy
 builder.Services.AddCors(options =>
 {
