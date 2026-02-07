@@ -8,6 +8,7 @@ import Dashboard from './pages/Dashboard';
 import VehicleList from './pages/vehicles/VehicleList';
 import VehicleForm from './pages/vehicles/VehicleForm';
 import VehicleDetails from './pages/vehicles/VehicleDetails';
+import MaintenancePage from './pages/maintenance/MaintenancePage';
 
 const theme = createTheme({
   palette: {
@@ -66,6 +67,14 @@ function App() {
               element={
                 <ProtectedRoute>
                   <VehicleForm />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/maintenance"
+              element={
+                <ProtectedRoute>
+                  <MaintenancePage />
                 </ProtectedRoute>
               }
             />

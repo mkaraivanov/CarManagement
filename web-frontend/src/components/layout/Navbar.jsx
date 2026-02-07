@@ -2,6 +2,8 @@ import { AppBar, Toolbar, Typography, Button, IconButton, Box } from '@mui/mater
 import { DirectionsCar, Logout } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
+import NotificationCenter from '../maintenance/NotificationCenter';
+import OverdueBadge from '../maintenance/OverdueBadge';
 
 const Navbar = () => {
   const navigate = useNavigate();
@@ -34,6 +36,11 @@ const Navbar = () => {
           <Button color="inherit" onClick={() => navigate('/vehicles')}>
             Vehicles
           </Button>
+          <Button color="inherit" onClick={() => navigate('/maintenance')}>
+            Maintenance
+          </Button>
+          <OverdueBadge />
+          <NotificationCenter />
           <Typography variant="body2" sx={{ mx: 2 }}>
             {user?.username}
           </Typography>

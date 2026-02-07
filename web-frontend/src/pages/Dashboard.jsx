@@ -1,11 +1,12 @@
 import { useState, useEffect } from 'react';
-import { Box, Grid, Card, CardContent, Typography, CircularProgress } from '@mui/material';
-import { DirectionsCar, Build, LocalGasStation, Add } from '@mui/icons-material';
+import { Box, Grid, Card, CardContent, Typography, CircularProgress, Alert } from '@mui/material';
+import { DirectionsCar, Build, LocalGasStation, Add, Schedule, Warning } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import AppLayout from '../components/layout/AppLayout';
 import vehicleService from '../services/vehicleService';
 import serviceRecordService from '../services/serviceRecordService';
 import fuelRecordService from '../services/fuelRecordService';
+import maintenanceScheduleService from '../services/maintenanceScheduleService';
 
 const Dashboard = () => {
   const navigate = useNavigate();
@@ -14,6 +15,8 @@ const Dashboard = () => {
     totalVehicles: 0,
     totalServiceRecords: 0,
     totalFuelRecords: 0,
+    maintenanceOverdue: 0,
+    maintenanceDueSoon: 0,
   });
 
   useEffect(() => {
@@ -49,10 +52,30 @@ const Dashboard = () => {
         }
       }
 
+      // Fetch maintenance stats
+      let maintenanceOverdue = 0;
+      let maintenanceDueSoon = 0;
+
+      try {
+        const overdueSchedules = await maintenanceScheduleService.getOverdue();
+        maintenanceOverdue = overdueSchedules.length;
+      } catch (err) {
+        console.error('Error fetching overdue maintenance:', err);
+      }
+
+      try {
+        const upcomingSchedules = await maintenanceScheduleService.getUpcoming();
+        maintenanceDueSoon = upcomingSchedules.length;
+      } catch (err) {
+        console.error('Error fetching upcoming maintenance:', err);
+      }
+
       setStats({
         totalVehicles: vehicles.length,
         totalServiceRecords,
         totalFuelRecords,
+        maintenanceOverdue,
+        maintenanceDueSoon,
       });
     } catch (err) {
       console.error('Error fetching dashboard data:', err);
@@ -130,9 +153,40 @@ const Dashboard = () => {
           Welcome to your car management dashboard
         </Typography>
 
+        {/* Maintenance Alerts */}
+        {stats.maintenanceOverdue > 0 && (
+          <Alert severity="error" sx={{ mb: 3 }}>
+            <Typography variant="subtitle2" gutterBottom>
+              {stats.maintenanceOverdue} overdue maintenance {stats.maintenanceOverdue === 1 ? 'item' : 'items'}
+            </Typography>
+            <Typography variant="body2">
+              Some maintenance tasks are past due. Visit the{' '}
+              <strong style={{ cursor: 'pointer' }} onClick={() => navigate('/maintenance')}>
+                Maintenance
+              </strong>{' '}
+              page to review and complete them.
+            </Typography>
+          </Alert>
+        )}
+
+        {stats.maintenanceDueSoon > 0 && stats.maintenanceOverdue === 0 && (
+          <Alert severity="warning" sx={{ mb: 3 }}>
+            <Typography variant="subtitle2" gutterBottom>
+              {stats.maintenanceDueSoon} upcoming maintenance {stats.maintenanceDueSoon === 1 ? 'item' : 'items'}
+            </Typography>
+            <Typography variant="body2">
+              Some maintenance tasks are due soon. Visit the{' '}
+              <strong style={{ cursor: 'pointer' }} onClick={() => navigate('/maintenance')}>
+                Maintenance
+              </strong>{' '}
+              page to review them.
+            </Typography>
+          </Alert>
+        )}
+
         {/* Statistics Cards */}
         <Grid container spacing={3} mb={4}>
-          <Grid item xs={12} md={4}>
+          <Grid item xs={12} md={3}>
             <StatCard
               title="Total Vehicles"
               value={stats.totalVehicles}
@@ -140,7 +194,7 @@ const Dashboard = () => {
               color="primary"
             />
           </Grid>
-          <Grid item xs={12} md={4}>
+          <Grid item xs={12} md={3}>
             <StatCard
               title="Service Records"
               value={stats.totalServiceRecords}
@@ -148,12 +202,20 @@ const Dashboard = () => {
               color="secondary"
             />
           </Grid>
-          <Grid item xs={12} md={4}>
+          <Grid item xs={12} md={3}>
             <StatCard
               title="Fuel Records"
               value={stats.totalFuelRecords}
               icon={<LocalGasStation />}
               color="success"
+            />
+          </Grid>
+          <Grid item xs={12} md={3}>
+            <StatCard
+              title="Overdue Maintenance"
+              value={stats.maintenanceOverdue}
+              icon={<Warning />}
+              color={stats.maintenanceOverdue > 0 ? 'error' : 'info'}
             />
           </Grid>
         </Grid>
@@ -183,11 +245,11 @@ const Dashboard = () => {
           </Grid>
           <Grid item xs={12} md={4}>
             <QuickActionCard
-              title="Service & Fuel"
-              description="Track service and fuel records"
-              icon={<Build sx={{ fontSize: 40 }} />}
+              title="Maintenance"
+              description="Manage preventive maintenance schedules"
+              icon={<Schedule sx={{ fontSize: 40 }} />}
               color="secondary"
-              onClick={() => navigate('/vehicles')}
+              onClick={() => navigate('/maintenance')}
             />
           </Grid>
         </Grid>
