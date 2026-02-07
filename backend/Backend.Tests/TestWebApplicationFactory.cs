@@ -9,5 +9,19 @@ public class TestWebApplicationFactory : WebApplicationFactory<Program>
     {
         // Set environment to Testing - Program.cs will use In-Memory database
         builder.UseEnvironment("Testing");
+
+        // Set content root to the backend project directory
+        // This ensures paths like 'tessdata' resolve correctly
+        var backendPath = Path.Combine(
+            Directory.GetCurrentDirectory(),
+            "..",
+            "..",
+            "..",
+            "..",
+            "backend"
+        );
+        var absoluteBackendPath = Path.GetFullPath(backendPath);
+
+        builder.UseContentRoot(absoluteBackendPath);
     }
 }

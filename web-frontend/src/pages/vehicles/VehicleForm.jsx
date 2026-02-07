@@ -12,10 +12,11 @@ import {
   Alert,
   CircularProgress,
 } from '@mui/material';
-import { Save, Cancel } from '@mui/icons-material';
+import { Save, Cancel, CloudUpload } from '@mui/icons-material';
 import AppLayout from '../../components/layout/AppLayout';
 import vehicleService from '../../services/vehicleService';
 import vehicleReferenceService from '../../services/vehicleReferenceService';
+import RegistrationUploadDialog from '../../components/vehicles/RegistrationUploadDialog';
 
 const VehicleForm = () => {
   const { id } = useParams();
@@ -25,6 +26,7 @@ const VehicleForm = () => {
   const [loading, setLoading] = useState(isEdit);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
+  const [uploadDialogOpen, setUploadDialogOpen] = useState(false);
 
   // Reference data for dropdowns
   const [makes, setMakes] = useState([]);
@@ -41,6 +43,16 @@ const VehicleForm = () => {
     purchaseDate: '',
     color: '',
     status: 0, // Active
+    // Registration fields
+    registrationNumber: '',
+    registrationIssueDate: '',
+    registrationExpiryDate: '',
+    ownerName: '',
+    // Additional vehicle specs
+    bodyType: '',
+    engineInfo: '',
+    fuelType: '',
+    transmission: '',
   });
 
   useEffect(() => {
@@ -73,6 +85,16 @@ const VehicleForm = () => {
         purchaseDate: data.purchaseDate ? data.purchaseDate.split('T')[0] : '',
         color: data.color || '',
         status: data.status || 0,
+        // Registration fields
+        registrationNumber: data.registrationNumber || '',
+        registrationIssueDate: data.registrationIssueDate ? data.registrationIssueDate.split('T')[0] : '',
+        registrationExpiryDate: data.registrationExpiryDate ? data.registrationExpiryDate.split('T')[0] : '',
+        ownerName: data.ownerName || '',
+        // Additional vehicle specs
+        bodyType: data.bodyType || '',
+        engineInfo: data.engineInfo || '',
+        fuelType: data.fuelType || '',
+        transmission: data.transmission || '',
       });
 
       // Find the make and set its models when editing
@@ -131,6 +153,36 @@ const VehicleForm = () => {
     }
   };
 
+  const handleExtractedData = (extractedData) => {
+    // Pre-fill form with extracted data
+    setFormData((prev) => ({
+      ...prev,
+      ...(extractedData.make && { make: extractedData.make }),
+      ...(extractedData.model && { model: extractedData.model }),
+      ...(extractedData.year && { year: parseInt(extractedData.year) || prev.year }),
+      ...(extractedData.licensePlate && { licensePlate: extractedData.licensePlate }),
+      ...(extractedData.vin && { vin: extractedData.vin }),
+      ...(extractedData.color && { color: extractedData.color }),
+      ...(extractedData.registrationNumber && { registrationNumber: extractedData.registrationNumber }),
+      ...(extractedData.registrationIssueDate && { registrationIssueDate: extractedData.registrationIssueDate }),
+      ...(extractedData.registrationExpiryDate && { registrationExpiryDate: extractedData.registrationExpiryDate }),
+      ...(extractedData.ownerName && { ownerName: extractedData.ownerName }),
+      ...(extractedData.bodyType && { bodyType: extractedData.bodyType }),
+      ...(extractedData.engineInfo && { engineInfo: extractedData.engineInfo }),
+      ...(extractedData.fuelType && { fuelType: extractedData.fuelType }),
+      ...(extractedData.transmission && { transmission: extractedData.transmission }),
+    }));
+
+    // If make was extracted, find and set the models
+    if (extractedData.make && makes.length > 0) {
+      const make = makes.find(m => m.name.toLowerCase() === extractedData.make.toLowerCase());
+      if (make) {
+        setSelectedMakeId(make.id);
+        setAvailableModels(make.models);
+      }
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
@@ -142,6 +194,14 @@ const VehicleForm = () => {
         purchaseDate: formData.purchaseDate || null,
         vin: formData.vin || null,
         color: formData.color || null,
+        registrationNumber: formData.registrationNumber || null,
+        registrationIssueDate: formData.registrationIssueDate || null,
+        registrationExpiryDate: formData.registrationExpiryDate || null,
+        ownerName: formData.ownerName || null,
+        bodyType: formData.bodyType || null,
+        engineInfo: formData.engineInfo || null,
+        fuelType: formData.fuelType || null,
+        transmission: formData.transmission || null,
       };
 
       if (isEdit) {
@@ -170,9 +230,20 @@ const VehicleForm = () => {
   return (
     <AppLayout>
       <Box>
-        <Typography variant="h4" gutterBottom>
-          {isEdit ? 'Edit Vehicle' : 'Add New Vehicle'}
-        </Typography>
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+          <Typography variant="h4">
+            {isEdit ? 'Edit Vehicle' : 'Add New Vehicle'}
+          </Typography>
+          {!isEdit && (
+            <Button
+              variant="outlined"
+              startIcon={<CloudUpload />}
+              onClick={() => setUploadDialogOpen(true)}
+            >
+              Upload Registration
+            </Button>
+          )}
+        </Box>
 
         {error && (
           <Alert severity="error" sx={{ mb: 2 }} onClose={() => setError('')}>
@@ -304,6 +375,100 @@ const VehicleForm = () => {
                     <MenuItem value={2}>Inactive</MenuItem>
                   </TextField>
                 </Grid>
+
+                {/* Registration Information Section */}
+                <Grid item xs={12}>
+                  <Typography variant="h6" sx={{ mt: 2, mb: 1 }}>
+                    Registration Information (Optional)
+                  </Typography>
+                </Grid>
+                <Grid item xs={12} md={6}>
+                  <TextField
+                    fullWidth
+                    label="Registration Number"
+                    name="registrationNumber"
+                    value={formData.registrationNumber}
+                    onChange={handleChange}
+                  />
+                </Grid>
+                <Grid item xs={12} md={6}>
+                  <TextField
+                    fullWidth
+                    label="Owner Name"
+                    name="ownerName"
+                    value={formData.ownerName}
+                    onChange={handleChange}
+                  />
+                </Grid>
+                <Grid item xs={12} md={6}>
+                  <TextField
+                    fullWidth
+                    label="Registration Issue Date"
+                    name="registrationIssueDate"
+                    type="date"
+                    value={formData.registrationIssueDate}
+                    onChange={handleChange}
+                    InputLabelProps={{ shrink: true }}
+                  />
+                </Grid>
+                <Grid item xs={12} md={6}>
+                  <TextField
+                    fullWidth
+                    label="Registration Expiry Date"
+                    name="registrationExpiryDate"
+                    type="date"
+                    value={formData.registrationExpiryDate}
+                    onChange={handleChange}
+                    InputLabelProps={{ shrink: true }}
+                  />
+                </Grid>
+
+                {/* Vehicle Specifications Section */}
+                <Grid item xs={12}>
+                  <Typography variant="h6" sx={{ mt: 2, mb: 1 }}>
+                    Vehicle Specifications (Optional)
+                  </Typography>
+                </Grid>
+                <Grid item xs={12} md={6}>
+                  <TextField
+                    fullWidth
+                    label="Body Type"
+                    name="bodyType"
+                    value={formData.bodyType}
+                    onChange={handleChange}
+                    placeholder="e.g., Sedan, SUV, Truck"
+                  />
+                </Grid>
+                <Grid item xs={12} md={6}>
+                  <TextField
+                    fullWidth
+                    label="Fuel Type"
+                    name="fuelType"
+                    value={formData.fuelType}
+                    onChange={handleChange}
+                    placeholder="e.g., Gasoline, Diesel, Electric"
+                  />
+                </Grid>
+                <Grid item xs={12} md={6}>
+                  <TextField
+                    fullWidth
+                    label="Transmission"
+                    name="transmission"
+                    value={formData.transmission}
+                    onChange={handleChange}
+                    placeholder="e.g., Automatic, Manual, CVT"
+                  />
+                </Grid>
+                <Grid item xs={12} md={6}>
+                  <TextField
+                    fullWidth
+                    label="Engine Info"
+                    name="engineInfo"
+                    value={formData.engineInfo}
+                    onChange={handleChange}
+                    placeholder="e.g., 2.0L 4-cylinder"
+                  />
+                </Grid>
               </Grid>
 
               <Box sx={{ display: 'flex', gap: 2, mt: 3 }}>
@@ -327,6 +492,13 @@ const VehicleForm = () => {
             </form>
           </CardContent>
         </Card>
+
+        {/* Registration Upload Dialog */}
+        <RegistrationUploadDialog
+          open={uploadDialogOpen}
+          onClose={() => setUploadDialogOpen(false)}
+          onDataExtracted={handleExtractedData}
+        />
       </Box>
     </AppLayout>
   );

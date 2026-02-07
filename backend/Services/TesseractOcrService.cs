@@ -1,4 +1,5 @@
 using Microsoft.Extensions.Configuration;
+using Microsoft.AspNetCore.Hosting;
 using Tesseract;
 using ImageMagick;
 using Docnet.Core;
@@ -12,17 +13,32 @@ public class TesseractOcrService : IOcrService
     private readonly string _language;
     private readonly ILogger<TesseractOcrService> _logger;
 
-    public TesseractOcrService(IConfiguration configuration, ILogger<TesseractOcrService> logger)
+    public TesseractOcrService(
+        IConfiguration configuration,
+        IWebHostEnvironment environment,
+        ILogger<TesseractOcrService> logger)
     {
         var ocrConfig = configuration.GetSection("Ocr");
-        _tesseractDataPath = ocrConfig["TesseractDataPath"] ?? "tessdata";
+        var configuredPath = ocrConfig["TesseractDataPath"] ?? "tessdata";
         _language = ocrConfig["Language"] ?? "eng";
         _logger = logger;
+
+        // Resolve path: if relative, make it relative to ContentRootPath
+        if (Path.IsPathRooted(configuredPath))
+        {
+            _tesseractDataPath = configuredPath;
+        }
+        else
+        {
+            _tesseractDataPath = Path.Combine(environment.ContentRootPath, configuredPath);
+        }
+
+        _logger.LogInformation("Tesseract data path resolved to: {Path}", _tesseractDataPath);
 
         // Verify tessdata directory exists
         if (!Directory.Exists(_tesseractDataPath))
         {
-            throw new DirectoryNotFoundException($"Tesseract data path '{_tesseractDataPath}' not found");
+            throw new DirectoryNotFoundException($"Tesseract data path '{_tesseractDataPath}' not found. Content root: {environment.ContentRootPath}");
         }
 
         var trainedDataFile = Path.Combine(_tesseractDataPath, $"{_language}.traineddata");
@@ -30,26 +46,35 @@ public class TesseractOcrService : IOcrService
         {
             throw new FileNotFoundException($"Tesseract trained data file '{trainedDataFile}' not found");
         }
+
+        _logger.LogInformation("Tesseract OCR service initialized successfully with language: {Language}", _language);
     }
 
     public async Task<string> ExtractTextAsync(Stream imageStream, string language = "eng")
     {
         try
         {
+            _logger.LogInformation("Starting text extraction from image stream");
+
             // Preprocess image for better OCR accuracy
+            _logger.LogInformation("Preprocessing image...");
             var preprocessedBytes = await PreprocessImageAsync(imageStream);
+            _logger.LogInformation("Image preprocessed, size: {Size} bytes", preprocessedBytes.Length);
 
             // Use Tesseract to extract text
+            _logger.LogInformation("Initializing Tesseract engine with path: {Path}, language: {Language}", _tesseractDataPath, language);
             using (var engine = new TesseractEngine(_tesseractDataPath, language, EngineMode.Default))
             {
+                _logger.LogInformation("Loading image from memory...");
                 using (var img = Pix.LoadFromMemory(preprocessedBytes))
                 {
+                    _logger.LogInformation("Processing image with Tesseract...");
                     using (var page = engine.Process(img))
                     {
                         var text = page.GetText();
                         var confidence = page.GetMeanConfidence();
 
-                        _logger.LogInformation("OCR completed with confidence: {Confidence}", confidence);
+                        _logger.LogInformation("OCR completed with confidence: {Confidence}, text length: {Length}", confidence, text?.Length ?? 0);
 
                         return text ?? string.Empty;
                     }
@@ -58,7 +83,11 @@ public class TesseractOcrService : IOcrService
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error extracting text from image");
+            _logger.LogError(ex, "Error extracting text from image. Exception type: {Type}, Message: {Message}", ex.GetType().Name, ex.Message);
+            if (ex.InnerException != null)
+            {
+                _logger.LogError("Inner exception: {Type}, Message: {Message}", ex.InnerException.GetType().Name, ex.InnerException.Message);
+            }
             throw new InvalidOperationException("Failed to extract text from image", ex);
         }
     }
@@ -78,7 +107,7 @@ public class TesseractOcrService : IOcrService
                 // Process PDF using Docnet
                 using (var library = DocLib.Instance)
                 {
-                    using (var docReader = library.GetDocReader(pdfBytes, new PageDimensions(1920, 1080)))
+                    using (var docReader = library.GetDocReader(pdfBytes, new PageDimensions(1080, 1920)))
                     {
                         var pageCount = docReader.GetPageCount();
                         _logger.LogInformation("Processing PDF with {PageCount} pages", pageCount);
@@ -119,8 +148,11 @@ public class TesseractOcrService : IOcrService
     {
         try
         {
+            _logger.LogInformation("Starting image preprocessing with ImageMagick");
             using (var image = new MagickImage(imageStream))
             {
+                _logger.LogInformation("Image loaded: {Width}x{Height}, Format: {Format}", image.Width, image.Height, image.Format);
+
                 // Convert to grayscale for better OCR accuracy
                 image.Grayscale();
 
@@ -135,19 +167,23 @@ public class TesseractOcrService : IOcrService
                 image.Density = new Density(300, 300);
 
                 // Convert to byte array
-                return await Task.FromResult(image.ToByteArray(MagickFormat.Png));
+                var result = await Task.FromResult(image.ToByteArray(MagickFormat.Png));
+                _logger.LogInformation("Image preprocessing completed, result size: {Size} bytes", result.Length);
+                return result;
             }
         }
         catch (Exception ex)
         {
-            _logger.LogWarning(ex, "Error preprocessing image, using original");
+            _logger.LogWarning(ex, "Error preprocessing image (Type: {Type}, Message: {Message}), using original", ex.GetType().Name, ex.Message);
 
             // If preprocessing fails, return original image
             using (var memoryStream = new MemoryStream())
             {
                 imageStream.Position = 0;
                 await imageStream.CopyToAsync(memoryStream);
-                return memoryStream.ToArray();
+                var result = memoryStream.ToArray();
+                _logger.LogInformation("Returning original image, size: {Size} bytes", result.Length);
+                return result;
             }
         }
     }
@@ -157,8 +193,8 @@ public class TesseractOcrService : IOcrService
         // Docnet returns raw BGRA bytes, convert to image format
         using (var image = new MagickImage(rawBytes, new MagickReadSettings
         {
-            Width = width,
-            Height = height,
+            Width = (uint)width,
+            Height = (uint)height,
             Format = MagickFormat.Bgra,
             Depth = 8
         }))
