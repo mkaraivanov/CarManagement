@@ -43,6 +43,21 @@ public class VehicleService : IVehicleService
             Color = request.Color,
             Status = request.Status,
             PhotoUrl = request.PhotoUrl,
+            // Registration fields
+            RegistrationNumber = request.RegistrationNumber,
+            RegistrationIssueDate = request.RegistrationIssueDate,
+            RegistrationExpiryDate = request.RegistrationExpiryDate,
+            RegistrationDocumentUrl = request.RegistrationDocumentUrl,
+            RegistrationStatus = request.RegistrationStatus,
+            // Owner information
+            OwnerName = request.OwnerName,
+            OwnerAddress = request.OwnerAddress,
+            // Vehicle specifications
+            BodyType = request.BodyType,
+            EngineInfo = request.EngineInfo,
+            FuelType = request.FuelType,
+            Transmission = request.Transmission,
+            Seats = request.Seats,
             CreatedAt = DateTime.UtcNow,
             UpdatedAt = DateTime.UtcNow
         };
@@ -90,6 +105,45 @@ public class VehicleService : IVehicleService
 
         if (request.PhotoUrl != null)
             vehicle.PhotoUrl = request.PhotoUrl;
+
+        // Registration fields
+        if (request.RegistrationNumber != null)
+            vehicle.RegistrationNumber = request.RegistrationNumber;
+
+        if (request.RegistrationIssueDate.HasValue)
+            vehicle.RegistrationIssueDate = request.RegistrationIssueDate;
+
+        if (request.RegistrationExpiryDate.HasValue)
+            vehicle.RegistrationExpiryDate = request.RegistrationExpiryDate;
+
+        if (request.RegistrationDocumentUrl != null)
+            vehicle.RegistrationDocumentUrl = request.RegistrationDocumentUrl;
+
+        if (request.RegistrationStatus.HasValue)
+            vehicle.RegistrationStatus = request.RegistrationStatus.Value;
+
+        // Owner information
+        if (request.OwnerName != null)
+            vehicle.OwnerName = request.OwnerName;
+
+        if (request.OwnerAddress != null)
+            vehicle.OwnerAddress = request.OwnerAddress;
+
+        // Vehicle specifications
+        if (request.BodyType != null)
+            vehicle.BodyType = request.BodyType;
+
+        if (request.EngineInfo != null)
+            vehicle.EngineInfo = request.EngineInfo;
+
+        if (request.FuelType != null)
+            vehicle.FuelType = request.FuelType;
+
+        if (request.Transmission != null)
+            vehicle.Transmission = request.Transmission;
+
+        if (request.Seats.HasValue)
+            vehicle.Seats = request.Seats;
 
         vehicle.UpdatedAt = DateTime.UtcNow;
 

@@ -15,6 +15,25 @@ public class VehicleDto
     public string? Color { get; set; }
     public VehicleStatus Status { get; set; }
     public string? PhotoUrl { get; set; }
+
+    // Registration fields
+    public string? RegistrationNumber { get; set; }
+    public DateTime? RegistrationIssueDate { get; set; }
+    public DateTime? RegistrationExpiryDate { get; set; }
+    public string? RegistrationDocumentUrl { get; set; }
+    public RegistrationStatus RegistrationStatus { get; set; }
+
+    // Owner information
+    public string? OwnerName { get; set; }
+    public string? OwnerAddress { get; set; }
+
+    // Vehicle specifications
+    public string? BodyType { get; set; }
+    public string? EngineInfo { get; set; }
+    public string? FuelType { get; set; }
+    public string? Transmission { get; set; }
+    public int? Seats { get; set; }
+
     public DateTime CreatedAt { get; set; }
     public DateTime UpdatedAt { get; set; }
 }

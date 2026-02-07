@@ -50,14 +50,25 @@ builder.Services.AddScoped<Backend.Services.IVehicleService, Backend.Services.Ve
 builder.Services.AddScoped<Backend.Services.IServiceRecordService, Backend.Services.ServiceRecordService>();
 builder.Services.AddScoped<Backend.Services.IFuelRecordService, Backend.Services.FuelRecordService>();
 
+// Register OCR and file storage services
+builder.Services.AddScoped<Backend.Services.IFileStorageService, Backend.Services.LocalFileStorageService>();
+builder.Services.AddScoped<Backend.Services.IOcrService, Backend.Services.TesseractOcrService>();
+builder.Services.AddScoped<Backend.Services.RegistrationParserService>();
+
 // Add CORS policy
 builder.Services.AddCors(options =>
 {
     options.AddDefaultPolicy(policy =>
-        policy.WithOrigins("http://localhost:5173")
+        policy.WithOrigins("http://localhost:5173", "http://localhost:5175")
               .AllowAnyHeader()
               .AllowAnyMethod()
               .AllowCredentials());
+});
+
+// Configure file upload limits
+builder.Services.Configure<Microsoft.AspNetCore.Http.Features.FormOptions>(options =>
+{
+    options.MultipartBodyLengthLimit = 10 * 1024 * 1024; // 10MB
 });
 
 // Add services to the container.
@@ -77,6 +88,19 @@ if (app.Environment.IsDevelopment())
 
 // Enable CORS
 app.UseCors();
+
+// Serve uploaded files from the uploads directory
+var uploadsPath = Path.Combine(Directory.GetCurrentDirectory(), "uploads");
+if (!Directory.Exists(uploadsPath))
+{
+    Directory.CreateDirectory(uploadsPath);
+}
+
+app.UseStaticFiles(new Microsoft.AspNetCore.Builder.StaticFileOptions
+{
+    FileProvider = new Microsoft.Extensions.FileProviders.PhysicalFileProvider(uploadsPath),
+    RequestPath = "/files"
+});
 
 app.UseHttpsRedirection();
 

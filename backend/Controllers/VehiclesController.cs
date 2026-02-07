@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
 using Backend.DTOs;
 using Backend.Services;
+using Backend.Models;
 
 namespace Backend.Controllers;
 
@@ -30,22 +31,7 @@ public class VehiclesController : ControllerBase
         var userId = GetUserId();
         var vehicles = await _vehicleService.GetUserVehiclesAsync(userId);
 
-        var vehicleDtos = vehicles.Select(v => new VehicleDto
-        {
-            Id = v.Id,
-            Make = v.Make,
-            Model = v.Model,
-            Year = v.Year,
-            VIN = v.VIN,
-            LicensePlate = v.LicensePlate,
-            CurrentMileage = v.CurrentMileage,
-            PurchaseDate = v.PurchaseDate,
-            Color = v.Color,
-            Status = v.Status,
-            PhotoUrl = v.PhotoUrl,
-            CreatedAt = v.CreatedAt,
-            UpdatedAt = v.UpdatedAt
-        });
+        var vehicleDtos = vehicles.Select(v => MapToVehicleDto(v));
 
         return Ok(vehicleDtos);
     }
@@ -59,22 +45,7 @@ public class VehiclesController : ControllerBase
         if (vehicle == null)
             return NotFound(new { message = "Vehicle not found" });
 
-        var vehicleDto = new VehicleDto
-        {
-            Id = vehicle.Id,
-            Make = vehicle.Make,
-            Model = vehicle.Model,
-            Year = vehicle.Year,
-            VIN = vehicle.VIN,
-            LicensePlate = vehicle.LicensePlate,
-            CurrentMileage = vehicle.CurrentMileage,
-            PurchaseDate = vehicle.PurchaseDate,
-            Color = vehicle.Color,
-            Status = vehicle.Status,
-            PhotoUrl = vehicle.PhotoUrl,
-            CreatedAt = vehicle.CreatedAt,
-            UpdatedAt = vehicle.UpdatedAt
-        };
+        var vehicleDto = MapToVehicleDto(vehicle);
 
         return Ok(vehicleDto);
     }
@@ -85,22 +56,7 @@ public class VehiclesController : ControllerBase
         var userId = GetUserId();
         var vehicle = await _vehicleService.CreateVehicleAsync(request, userId);
 
-        var vehicleDto = new VehicleDto
-        {
-            Id = vehicle.Id,
-            Make = vehicle.Make,
-            Model = vehicle.Model,
-            Year = vehicle.Year,
-            VIN = vehicle.VIN,
-            LicensePlate = vehicle.LicensePlate,
-            CurrentMileage = vehicle.CurrentMileage,
-            PurchaseDate = vehicle.PurchaseDate,
-            Color = vehicle.Color,
-            Status = vehicle.Status,
-            PhotoUrl = vehicle.PhotoUrl,
-            CreatedAt = vehicle.CreatedAt,
-            UpdatedAt = vehicle.UpdatedAt
-        };
+        var vehicleDto = MapToVehicleDto(vehicle);
 
         return CreatedAtAction(nameof(GetVehicle), new { id = vehicle.Id }, vehicleDto);
     }
@@ -114,22 +70,7 @@ public class VehiclesController : ControllerBase
         if (vehicle == null)
             return NotFound(new { message = "Vehicle not found" });
 
-        var vehicleDto = new VehicleDto
-        {
-            Id = vehicle.Id,
-            Make = vehicle.Make,
-            Model = vehicle.Model,
-            Year = vehicle.Year,
-            VIN = vehicle.VIN,
-            LicensePlate = vehicle.LicensePlate,
-            CurrentMileage = vehicle.CurrentMileage,
-            PurchaseDate = vehicle.PurchaseDate,
-            Color = vehicle.Color,
-            Status = vehicle.Status,
-            PhotoUrl = vehicle.PhotoUrl,
-            CreatedAt = vehicle.CreatedAt,
-            UpdatedAt = vehicle.UpdatedAt
-        };
+        var vehicleDto = MapToVehicleDto(vehicle);
 
         return Ok(vehicleDto);
     }
@@ -156,6 +97,41 @@ public class VehiclesController : ControllerBase
             return NotFound(new { message = "Vehicle not found" });
 
         return NoContent();
+    }
+
+    private static VehicleDto MapToVehicleDto(Vehicle vehicle)
+    {
+        return new VehicleDto
+        {
+            Id = vehicle.Id,
+            Make = vehicle.Make,
+            Model = vehicle.Model,
+            Year = vehicle.Year,
+            VIN = vehicle.VIN,
+            LicensePlate = vehicle.LicensePlate,
+            CurrentMileage = vehicle.CurrentMileage,
+            PurchaseDate = vehicle.PurchaseDate,
+            Color = vehicle.Color,
+            Status = vehicle.Status,
+            PhotoUrl = vehicle.PhotoUrl,
+            // Registration fields
+            RegistrationNumber = vehicle.RegistrationNumber,
+            RegistrationIssueDate = vehicle.RegistrationIssueDate,
+            RegistrationExpiryDate = vehicle.RegistrationExpiryDate,
+            RegistrationDocumentUrl = vehicle.RegistrationDocumentUrl,
+            RegistrationStatus = vehicle.RegistrationStatus,
+            // Owner information
+            OwnerName = vehicle.OwnerName,
+            OwnerAddress = vehicle.OwnerAddress,
+            // Vehicle specifications
+            BodyType = vehicle.BodyType,
+            EngineInfo = vehicle.EngineInfo,
+            FuelType = vehicle.FuelType,
+            Transmission = vehicle.Transmission,
+            Seats = vehicle.Seats,
+            CreatedAt = vehicle.CreatedAt,
+            UpdatedAt = vehicle.UpdatedAt
+        };
     }
 }
 

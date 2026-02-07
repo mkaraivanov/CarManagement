@@ -37,4 +37,40 @@ public class CreateVehicleRequest
 
     [MaxLength(500)]
     public string? PhotoUrl { get; set; }
+
+    // Registration fields
+    [MaxLength(50)]
+    public string? RegistrationNumber { get; set; }
+
+    public DateTime? RegistrationIssueDate { get; set; }
+
+    public DateTime? RegistrationExpiryDate { get; set; }
+
+    [MaxLength(500)]
+    public string? RegistrationDocumentUrl { get; set; }
+
+    public RegistrationStatus RegistrationStatus { get; set; } = RegistrationStatus.Unknown;
+
+    // Owner information
+    [MaxLength(100)]
+    public string? OwnerName { get; set; }
+
+    [MaxLength(300)]
+    public string? OwnerAddress { get; set; }
+
+    // Vehicle specifications
+    [MaxLength(50)]
+    public string? BodyType { get; set; }
+
+    [MaxLength(100)]
+    public string? EngineInfo { get; set; }
+
+    [MaxLength(30)]
+    public string? FuelType { get; set; }
+
+    [MaxLength(30)]
+    public string? Transmission { get; set; }
+
+    [Range(1, 20)]
+    public int? Seats { get; set; }
 }
