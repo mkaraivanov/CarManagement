@@ -308,6 +308,107 @@ curl http://localhost:5239/api/vehicles/{vehicleId}/fuel-efficiency \
 
 ---
 
+## 📄 Vehicle Registration Endpoints
+
+⚠️ **WARNING: These endpoints are backend-only. No frontend UI exists yet. Feature is incomplete.**
+
+### Extract Registration Data from Document
+```http
+POST /api/vehicle-registration/extract
+Authorization: Bearer <token>
+Content-Type: multipart/form-data
+
+file: <registration_document.jpg|png|pdf>
+```
+
+Extracts vehicle data from registration document using OCR.
+
+**Supported formats:** JPG, PNG, PDF (max 10MB)
+
+**Response 200:**
+```json
+{
+  "success": true,
+  "message": "Registration data extracted successfully",
+  "extractedData": {
+    "registrationNumber": {
+      "value": "ABC123",
+      "confidence": "High"
+    },
+    "make": {
+      "value": "Toyota",
+      "confidence": "High"
+    },
+    "model": {
+      "value": "Camry",
+      "confidence": "Medium"
+    },
+    "year": {
+      "value": "2022",
+      "confidence": "High"
+    },
+    "vin": {
+      "value": "1HGBH41JXMN109186",
+      "confidence": "High"
+    },
+    "ownerName": {
+      "value": "John Doe",
+      "confidence": "Medium"
+    },
+    "expiryDate": {
+      "value": "2026-12-31",
+      "confidence": "Low"
+    }
+  },
+  "rawText": "full extracted OCR text..."
+}
+```
+
+**Response 400 (validation errors):**
+```json
+{
+  "success": false,
+  "message": "No file provided",
+  "errors": ["Please upload a registration document image or PDF"]
+}
+```
+
+### Upload Registration Document for Vehicle
+```http
+POST /api/vehicle-registration/upload/{vehicleId}
+Authorization: Bearer <token>
+Content-Type: multipart/form-data
+
+file: <registration_document.jpg|png|pdf>
+```
+
+Uploads and stores a registration document for an existing vehicle.
+
+**Response 200:**
+```json
+{
+  "success": true,
+  "message": "Registration document uploaded successfully",
+  "documentUrl": "uploads/user-id/registrations/filename.jpg",
+  "publicUrl": "/uploads/user-id/registrations/filename.jpg"
+}
+```
+
+**cURL Example:**
+```bash
+# Extract registration data
+curl -X POST http://localhost:5239/api/vehicle-registration/extract \
+  -H "Authorization: Bearer $TOKEN" \
+  -F "file=@registration.jpg"
+
+# Upload registration document
+curl -X POST http://localhost:5239/api/vehicle-registration/upload/{vehicleId} \
+  -H "Authorization: Bearer $TOKEN" \
+  -F "file=@registration.pdf"
+```
+
+---
+
 ## 📋 Status Codes
 
 - `200 OK` - Success

@@ -9,6 +9,19 @@ CarManagement is a full-stack vehicle management application with three main com
 - **Web Frontend**: React 19 + Vite + Material-UI
 - **Mobile Frontend**: React Native (basic setup, in progress)
 
+## Documentation Structure
+
+This project uses structured documentation to maintain clarity and organization:
+
+- **`CLAUDE.md`** (this file) - AI assistant guide: workflows, patterns, best practices
+- **`backend/API.md`** - Complete API reference with request/response examples
+- **`docs/`** - Feature design documents and architecture decisions
+  - **`docs/features/`** - Detailed feature implementation plans
+  - **`docs/architecture/`** - System architecture and design decisions
+  - **`docs/adr/`** - Architecture Decision Records (ADRs)
+
+**See [`docs/README.md`](docs/README.md) for complete documentation guidelines.**
+
 ## Development Commands
 
 ### Backend (ASP.NET Core)
@@ -140,8 +153,11 @@ src/
 - `VITE_API_URL`: Backend API base URL (default: `http://localhost:5239/api`)
 
 **CORS:**
-- Backend allows requests from `http://localhost:5173` only (configured in Program.cs)
-- To add additional origins, modify the CORS policy in `Program.cs`
+- Backend allows requests from `http://localhost:5173` and `http://localhost:5175` (configured in Program.cs)
+- **Important**: If the frontend runs on a different port (Vite uses 5173 by default, but will use 5175+ if 5173 is occupied), you must update the CORS policy in `Program.cs` line 62 to include that port
+- To add the new port: `policy.WithOrigins("http://localhost:5173", "http://localhost:XXXX")`
+- After updating CORS, restart the backend for changes to take effect
+- **Common issue**: CORS errors in browser console indicate the frontend port is not in the allowed origins list
 
 ## API Endpoints
 
@@ -164,6 +180,10 @@ Authorization: Bearer <jwt_token>
 
 ### When Adding New Entities
 
+**FIRST: Create a feature design doc in `docs/features/` if this is a significant change!**
+
+Then follow these steps:
+
 1. **Create Model** in `backend/Models/` with EF Core annotations
 2. **Add DbSet** to `ApplicationDbContext.cs`
 3. **Configure Relationships** in `OnModelCreating()` method
@@ -176,12 +196,18 @@ Authorization: Bearer <jwt_token>
 
 ### When Adding New API Endpoints
 
+**FIRST: Ensure there's a feature design doc in `docs/features/` for this endpoint!**
+
+Then follow these steps:
+
 1. Add method to appropriate service interface + implementation
 2. Add controller action with proper HTTP verb attribute (`[HttpGet]`, `[HttpPost]`, etc.)
 3. Add `[Authorize]` attribute unless endpoint should be public
 4. Use DTOs for request/response (never expose Models directly)
 5. Return appropriate status codes (200, 201, 400, 404, 500)
 6. Update `backend/API.md` with endpoint documentation
+7. If no frontend exists yet, mark endpoint as "⚠️ No Frontend Yet" in API.md
+8. Update feature design doc with implementation status
 
 ### Frontend API Integration
 
@@ -199,6 +225,53 @@ Authorization: Bearer <jwt_token>
 ## Best Practices & Workflows
 
 This project is a solo development effort with AI assistance. These practices help maintain code quality and keep the AI effective.
+
+### Feature Completion Definition
+
+**CRITICAL RULE: A feature is NOT considered complete/implemented until it has BOTH backend AND frontend components.**
+
+- Backend-only APIs without UI are considered **incomplete features**
+- Frontend-only UIs without backend support are considered **incomplete features**
+- Only features with **working end-to-end integration** (backend + frontend + testing) are considered complete
+
+**Why this matters:**
+- Prevents accumulation of unused backend code
+- Ensures features are actually usable by end users
+- Maintains consistency between API and UI development
+- Helps AI assistants understand what's truly "done" vs "in progress"
+
+**When documenting features:**
+- Incomplete features must be listed in the "Incomplete Features" section of CLAUDE.md
+- Only remove from incomplete list when both backend and frontend are implemented and tested
+- Update API.md when backend is done, but mark endpoints as "⚠️ No Frontend Yet"
+
+### Feature Design Documentation
+
+**REQUIRED: All new major features MUST have a design document in `docs/features/` BEFORE implementation starts.**
+
+**What requires a design doc:**
+- Features spanning multiple files (3+ files)
+- Features requiring database schema changes
+- Features involving new technologies/libraries
+- Features with multiple implementation phases
+- Any feature estimated at 2+ days of work
+
+**Process:**
+1. **Before coding:** Copy `docs/features/_TEMPLATE.md` to `docs/features/feature-name.md`
+2. **Fill in all sections:** Context, technology decisions, API design, implementation phases, etc.
+3. **Commit the design doc** before starting implementation
+4. **Reference the doc** in commit messages during implementation
+5. **Update status** as phases complete: 🔵 Planning → 🟡 In Progress → ⚠️ Backend Only → ✅ Complete
+6. **Keep it current** - update the doc when requirements change
+
+**Benefits:**
+- Clearer thinking before coding
+- Better time estimates
+- Documentation for future reference
+- AI assistants can follow the plan accurately
+- Easier to pick up work after breaks
+
+**See [`docs/README.md`](docs/README.md) for complete guidelines and templates.**
 
 ### Git Workflow
 
@@ -438,6 +511,16 @@ cd backend/Backend.Tests && dotnet test
 # All tests must pass
 ```
 
+**Before Starting New Features:**
+```bash
+# Create feature design document
+cp docs/features/_TEMPLATE.md docs/features/my-feature-name.md
+# Fill in all sections before coding
+# Commit the design doc first
+git add docs/features/my-feature-name.md
+git commit -m "Add design doc for [feature name]"
+```
+
 ## Testing the Application Manually
 
 ### Full Flow Test
@@ -482,6 +565,15 @@ cd backend && dotnet ef database update
 - Check token hasn't expired
 - Ensure user making request owns the resource (vehicles, records)
 
+**CORS errors (Origin not allowed):**
+- **Symptom**: Browser console shows "Origin http://localhost:XXXX is not allowed by Access-Control-Allow-Origin"
+- **Cause**: Frontend port doesn't match the allowed origins in backend CORS configuration
+- **Solution**:
+  1. Check which port the frontend is running on (look at the Vite dev server output)
+  2. Update `backend/Program.cs` line 62 to include that port: `policy.WithOrigins("http://localhost:5173", "http://localhost:XXXX")`
+  3. Restart the backend: `cd backend && dotnet run`
+- **Note**: Vite uses port 5173 by default, but will automatically use 5175, 5176, etc. if 5173 is already in use
+
 ## Development Notes
 
 ### Adding Copilot/AI Instructions
@@ -499,6 +591,41 @@ Mobile frontend is currently a basic React Native setup. The structure follows s
 - Start Metro bundler first: `npm start`
 - Run platform-specific commands in separate terminal
 - iOS requires CocoaPods setup: `bundle install && bundle exec pod install`
+
+## Incomplete Features (Backend Only)
+
+These features have backend API implementations but are **NOT yet complete** because they lack frontend UI. They cannot be used by end users until the frontend is implemented.
+
+### Vehicle Registration Document Upload
+
+**Status:** ⚠️ Backend Only - No Frontend
+
+**Design Doc:** [`docs/features/vehicle-registration-ocr.md`](docs/features/vehicle-registration-ocr.md)
+
+**What exists (Backend):**
+- Backend API endpoints in `VehicleRegistrationController.cs`:
+  - `POST /api/vehicle-registration/extract` - OCR extraction from registration documents
+  - `POST /api/vehicle-registration/upload/{vehicleId}` - Upload registration document
+- OCR service using Tesseract (`TesseractOcrService.cs`)
+- Registration parser service (`RegistrationParserService.cs`)
+- File storage service (`LocalFileStorageService.cs`)
+- DTOs: `RegistrationExtractResponse`, `ExtractedFieldDto`
+- Database migration: Vehicle model includes registration fields
+- Documented in `backend/API.md` (marked as "⚠️ No Frontend Yet")
+
+**What's missing (Frontend):**
+- Web frontend UI for uploading registration documents
+- File upload component with drag-and-drop
+- Preview of extracted OCR data
+- Form integration to pre-fill vehicle fields from extracted data
+- Error handling and user feedback in UI
+
+**What's missing (Testing):**
+- Integration tests for registration endpoints
+- End-to-end testing with sample documents
+
+**Next steps:**
+See the complete implementation plan in [`docs/features/vehicle-registration-ocr.md`](docs/features/vehicle-registration-ocr.md) → Phase 6 & 7
 
 ### Future Enhancements (Not Yet Implemented)
 
