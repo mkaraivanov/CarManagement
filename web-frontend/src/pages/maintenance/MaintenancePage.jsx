@@ -20,6 +20,7 @@ import MaintenanceCalendar from '../../components/maintenance/MaintenanceCalenda
 import CreateScheduleForm from '../../components/maintenance/CreateScheduleForm';
 import vehicleService from '../../services/vehicleService';
 import maintenanceScheduleService from '../../services/maintenanceScheduleService';
+import PageTransition from '../../components/common/PageTransition';
 
 const MaintenancePage = () => {
   const [activeTab, setActiveTab] = useState(0);
@@ -92,7 +93,8 @@ const MaintenancePage = () => {
 
   return (
     <AppLayout>
-      <Box>
+      <PageTransition>
+        <Box>
         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', mb: 3 }}>
           <Box>
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 1 }}>
@@ -188,7 +190,8 @@ const MaintenancePage = () => {
           vehicleId={selectedVehicleId}
           onSuccess={handleCreateSuccess}
         />
-      </Box>
+        </Box>
+      </PageTransition>
     </AppLayout>
   );
 };

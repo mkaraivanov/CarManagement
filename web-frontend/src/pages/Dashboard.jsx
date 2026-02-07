@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Box, Grid, Card, CardContent, Typography, CircularProgress, Alert } from '@mui/material';
+import { Box, Grid, Card, CardContent, Typography, Alert } from '@mui/material';
 import { DirectionsCar, Build, LocalGasStation, Add, Schedule, Warning } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import AppLayout from '../components/layout/AppLayout';
@@ -7,6 +7,8 @@ import vehicleService from '../services/vehicleService';
 import serviceRecordService from '../services/serviceRecordService';
 import fuelRecordService from '../services/fuelRecordService';
 import maintenanceScheduleService from '../services/maintenanceScheduleService';
+import { DashboardSkeleton } from '../components/common/LoadingSkeleton';
+import PageTransition from '../components/common/PageTransition';
 
 const Dashboard = () => {
   const navigate = useNavigate();
@@ -85,7 +87,16 @@ const Dashboard = () => {
   };
 
   const StatCard = ({ title, value, icon, color }) => (
-    <Card sx={{ height: '100%' }}>
+    <Card
+      sx={{
+        height: '100%',
+        '&:hover': {
+          boxShadow: 4,
+          transform: 'translateY(-2px)',
+          transition: 'all 0.3s ease',
+        },
+      }}
+    >
       <CardContent>
         <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
           <Box
@@ -93,7 +104,7 @@ const Dashboard = () => {
               bgcolor: `${color}.light`,
               color: `${color}.main`,
               p: 1,
-              borderRadius: 1,
+              borderRadius: 2,
               mr: 2,
             }}
           >
@@ -104,14 +115,28 @@ const Dashboard = () => {
           </Typography>
         </Box>
         <Typography variant="h3" component="div">
-          {loading ? <CircularProgress size={40} /> : value}
+          {value}
         </Typography>
       </CardContent>
     </Card>
   );
 
   const QuickActionCard = ({ title, description, icon, onClick, color }) => (
-    <Card sx={{ height: '100%', cursor: 'pointer' }} onClick={onClick}>
+    <Card
+      sx={{
+        height: '100%',
+        cursor: 'pointer',
+        '&:hover': {
+          boxShadow: 6,
+          transform: 'translateY(-4px)',
+          transition: 'all 0.3s ease',
+        },
+        '&:active': {
+          transform: 'translateY(-2px)',
+        },
+      }}
+      onClick={onClick}
+    >
       <CardContent>
         <Box
           sx={{
@@ -145,7 +170,8 @@ const Dashboard = () => {
 
   return (
     <AppLayout>
-      <Box>
+      <PageTransition>
+        <Box>
         <Typography variant="h4" gutterBottom>
           Dashboard
         </Typography>
@@ -185,40 +211,46 @@ const Dashboard = () => {
         )}
 
         {/* Statistics Cards */}
-        <Grid container spacing={3} mb={4}>
-          <Grid item xs={12} md={3}>
-            <StatCard
-              title="Total Vehicles"
-              value={stats.totalVehicles}
-              icon={<DirectionsCar />}
-              color="primary"
-            />
+        {loading ? (
+          <Box mb={4}>
+            <DashboardSkeleton />
+          </Box>
+        ) : (
+          <Grid container spacing={3} mb={4}>
+            <Grid item xs={12} md={3}>
+              <StatCard
+                title="Total Vehicles"
+                value={stats.totalVehicles}
+                icon={<DirectionsCar />}
+                color="primary"
+              />
+            </Grid>
+            <Grid item xs={12} md={3}>
+              <StatCard
+                title="Service Records"
+                value={stats.totalServiceRecords}
+                icon={<Build />}
+                color="secondary"
+              />
+            </Grid>
+            <Grid item xs={12} md={3}>
+              <StatCard
+                title="Fuel Records"
+                value={stats.totalFuelRecords}
+                icon={<LocalGasStation />}
+                color="success"
+              />
+            </Grid>
+            <Grid item xs={12} md={3}>
+              <StatCard
+                title="Overdue Maintenance"
+                value={stats.maintenanceOverdue}
+                icon={<Warning />}
+                color={stats.maintenanceOverdue > 0 ? 'error' : 'info'}
+              />
+            </Grid>
           </Grid>
-          <Grid item xs={12} md={3}>
-            <StatCard
-              title="Service Records"
-              value={stats.totalServiceRecords}
-              icon={<Build />}
-              color="secondary"
-            />
-          </Grid>
-          <Grid item xs={12} md={3}>
-            <StatCard
-              title="Fuel Records"
-              value={stats.totalFuelRecords}
-              icon={<LocalGasStation />}
-              color="success"
-            />
-          </Grid>
-          <Grid item xs={12} md={3}>
-            <StatCard
-              title="Overdue Maintenance"
-              value={stats.maintenanceOverdue}
-              icon={<Warning />}
-              color={stats.maintenanceOverdue > 0 ? 'error' : 'info'}
-            />
-          </Grid>
-        </Grid>
+        )}
 
         {/* Quick Actions */}
         <Typography variant="h5" gutterBottom mt={4} mb={2}>
@@ -253,7 +285,8 @@ const Dashboard = () => {
             />
           </Grid>
         </Grid>
-      </Box>
+        </Box>
+      </PageTransition>
     </AppLayout>
   );
 };

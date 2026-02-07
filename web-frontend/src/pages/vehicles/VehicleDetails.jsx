@@ -10,7 +10,6 @@ import {
   Button,
   Tabs,
   Tab,
-  CircularProgress,
   Alert,
   Table,
   TableBody,
@@ -25,11 +24,15 @@ import {
   TextField,
   MenuItem,
 } from '@mui/material';
-import { Edit, Delete, ArrowBack, Add } from '@mui/icons-material';
+import { Edit, Delete, ArrowBack, Add, Build, LocalGasStation } from '@mui/icons-material';
 import AppLayout from '../../components/layout/AppLayout';
 import vehicleService from '../../services/vehicleService';
 import serviceRecordService from '../../services/serviceRecordService';
 import fuelRecordService from '../../services/fuelRecordService';
+import { VehicleDetailSkeleton } from '../../components/common/LoadingSkeleton';
+import ConfirmDialog from '../../components/common/ConfirmDialog';
+import PageTransition from '../../components/common/PageTransition';
+import EmptyState from '../../components/common/EmptyState';
 
 const VehicleDetails = () => {
   const { id } = useParams();
@@ -41,6 +44,7 @@ const VehicleDetails = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [tabValue, setTabValue] = useState(0);
+  const [confirmDelete, setConfirmDelete] = useState(false);
 
   // Modal states
   const [serviceModalOpen, setServiceModalOpen] = useState(false);
@@ -96,11 +100,11 @@ const VehicleDetails = () => {
     }
   };
 
-  const handleDelete = async () => {
-    if (!window.confirm('Are you sure you want to delete this vehicle?')) {
-      return;
-    }
+  const handleDeleteClick = () => {
+    setConfirmDelete(true);
+  };
 
+  const handleDeleteConfirm = async () => {
     try {
       await vehicleService.delete(id);
       navigate('/vehicles');
@@ -208,9 +212,7 @@ const VehicleDetails = () => {
   if (loading) {
     return (
       <AppLayout>
-        <Box sx={{ display: 'flex', justifyContent: 'center', p: 4 }}>
-          <CircularProgress />
-        </Box>
+        <VehicleDetailSkeleton />
       </AppLayout>
     );
   }
@@ -225,7 +227,8 @@ const VehicleDetails = () => {
 
   return (
     <AppLayout>
-      <Box>
+      <PageTransition>
+        <Box>
         <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
           <Button startIcon={<ArrowBack />} onClick={() => navigate('/vehicles')}>
             Back to Vehicles
@@ -257,7 +260,7 @@ const VehicleDetails = () => {
                   variant="outlined"
                   color="error"
                   startIcon={<Delete />}
-                  onClick={handleDelete}
+                  onClick={handleDeleteClick}
                 >
                   Delete
                 </Button>
@@ -348,9 +351,11 @@ const VehicleDetails = () => {
                 </Box>
 
                 {services.length === 0 ? (
-                  <Typography color="text.secondary" align="center" py={3}>
-                    No service records yet
-                  </Typography>
+                  <EmptyState
+                    icon={<Build />}
+                    title="No service records yet"
+                    description="Add your first service record to track maintenance history"
+                  />
                 ) : (
                   <TableContainer>
                     <Table size="small">
@@ -397,9 +402,11 @@ const VehicleDetails = () => {
                 </Box>
 
                 {fuelRecords.length === 0 ? (
-                  <Typography color="text.secondary" align="center" py={3}>
-                    No fuel records yet
-                  </Typography>
+                  <EmptyState
+                    icon={<LocalGasStation />}
+                    title="No fuel records yet"
+                    description="Add your first fuel record to track fuel consumption and efficiency"
+                  />
                 ) : (
                   <TableContainer>
                     <Table size="small">
@@ -620,7 +627,18 @@ const VehicleDetails = () => {
             </DialogActions>
           </form>
         </Dialog>
-      </Box>
+
+        <ConfirmDialog
+          open={confirmDelete}
+          onClose={() => setConfirmDelete(false)}
+          onConfirm={handleDeleteConfirm}
+          title="Delete Vehicle"
+          message="Are you sure you want to delete this vehicle? This action cannot be undone."
+          confirmText="Delete"
+          severity="error"
+        />
+        </Box>
+      </PageTransition>
     </AppLayout>
   );
 };

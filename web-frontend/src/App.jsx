@@ -1,6 +1,6 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
-import { CssBaseline, ThemeProvider, createTheme } from '@mui/material';
+import { CssBaseline, ThemeProvider } from '@mui/material';
 import ProtectedRoute from './components/auth/ProtectedRoute';
 import Login from './pages/Login';
 import Register from './pages/Register';
@@ -9,17 +9,7 @@ import VehicleList from './pages/vehicles/VehicleList';
 import VehicleForm from './pages/vehicles/VehicleForm';
 import VehicleDetails from './pages/vehicles/VehicleDetails';
 import MaintenancePage from './pages/maintenance/MaintenancePage';
-
-const theme = createTheme({
-  palette: {
-    primary: {
-      main: '#1976d2',
-    },
-    secondary: {
-      main: '#dc004e',
-    },
-  },
-});
+import theme from './theme';
 
 function App() {
   return (

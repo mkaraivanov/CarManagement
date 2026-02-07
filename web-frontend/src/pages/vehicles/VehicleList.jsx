@@ -14,17 +14,21 @@ import {
   IconButton,
   Chip,
   Alert,
-  CircularProgress,
 } from '@mui/material';
-import { Add, Edit, Delete, Visibility } from '@mui/icons-material';
+import { Add, Edit, Delete, Visibility, DirectionsCar } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import AppLayout from '../../components/layout/AppLayout';
 import vehicleService from '../../services/vehicleService';
+import { TableSkeleton } from '../../components/common/LoadingSkeleton';
+import ConfirmDialog from '../../components/common/ConfirmDialog';
+import PageTransition from '../../components/common/PageTransition';
+import EmptyState from '../../components/common/EmptyState';
 
 const VehicleList = () => {
   const [vehicles, setVehicles] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [confirmDelete, setConfirmDelete] = useState({ open: false, vehicleId: null });
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -43,14 +47,14 @@ const VehicleList = () => {
     }
   };
 
-  const handleDelete = async (id) => {
-    if (!window.confirm('Are you sure you want to delete this vehicle?')) {
-      return;
-    }
+  const handleDeleteClick = (id) => {
+    setConfirmDelete({ open: true, vehicleId: id });
+  };
 
+  const handleDeleteConfirm = async () => {
     try {
-      await vehicleService.delete(id);
-      setVehicles(vehicles.filter((v) => v.id !== id));
+      await vehicleService.delete(confirmDelete.vehicleId);
+      setVehicles(vehicles.filter((v) => v.id !== confirmDelete.vehicleId));
     } catch (err) {
       setError(err.response?.data?.message || 'Failed to delete vehicle');
     }
@@ -85,8 +89,18 @@ const VehicleList = () => {
   if (loading) {
     return (
       <AppLayout>
-        <Box sx={{ display: 'flex', justifyContent: 'center', p: 4 }}>
-          <CircularProgress />
+        <Box>
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 3 }}>
+            <Typography variant="h4">My Vehicles</Typography>
+            <Button
+              variant="contained"
+              startIcon={<Add />}
+              onClick={() => navigate('/vehicles/new')}
+            >
+              Add Vehicle
+            </Button>
+          </Box>
+          <TableSkeleton />
         </Box>
       </AppLayout>
     );
@@ -94,7 +108,8 @@ const VehicleList = () => {
 
   return (
     <AppLayout>
-      <Box>
+      <PageTransition>
+        <Box>
         <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 3 }}>
           <Typography variant="h4">My Vehicles</Typography>
           <Button
@@ -115,21 +130,13 @@ const VehicleList = () => {
         {vehicles.length === 0 ? (
           <Card>
             <CardContent>
-              <Box sx={{ textAlign: 'center', py: 4 }}>
-                <Typography variant="h6" color="text.secondary" gutterBottom>
-                  No vehicles yet
-                </Typography>
-                <Typography variant="body2" color="text.secondary" mb={2}>
-                  Add your first vehicle to get started
-                </Typography>
-                <Button
-                  variant="contained"
-                  startIcon={<Add />}
-                  onClick={() => navigate('/vehicles/new')}
-                >
-                  Add Vehicle
-                </Button>
-              </Box>
+              <EmptyState
+                icon={<DirectionsCar />}
+                title="No vehicles yet"
+                description="Add your first vehicle to get started"
+                actionLabel="Add Vehicle"
+                onAction={() => navigate('/vehicles/new')}
+              />
             </CardContent>
           </Card>
         ) : (
@@ -179,7 +186,7 @@ const VehicleList = () => {
                       <IconButton
                         size="small"
                         color="error"
-                        onClick={() => handleDelete(vehicle.id)}
+                        onClick={() => handleDeleteClick(vehicle.id)}
                       >
                         <Delete />
                       </IconButton>
@@ -190,7 +197,18 @@ const VehicleList = () => {
             </Table>
           </TableContainer>
         )}
-      </Box>
+
+        <ConfirmDialog
+          open={confirmDelete.open}
+          onClose={() => setConfirmDelete({ open: false, vehicleId: null })}
+          onConfirm={handleDeleteConfirm}
+          title="Delete Vehicle"
+          message="Are you sure you want to delete this vehicle? This action cannot be undone."
+          confirmText="Delete"
+          severity="error"
+        />
+        </Box>
+      </PageTransition>
     </AppLayout>
   );
 };

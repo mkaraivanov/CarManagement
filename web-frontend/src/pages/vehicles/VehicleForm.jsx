@@ -17,6 +17,7 @@ import AppLayout from '../../components/layout/AppLayout';
 import vehicleService from '../../services/vehicleService';
 import vehicleReferenceService from '../../services/vehicleReferenceService';
 import RegistrationUploadDialog from '../../components/vehicles/RegistrationUploadDialog';
+import PageTransition from '../../components/common/PageTransition';
 
 const VehicleForm = () => {
   const { id } = useParams();
@@ -229,7 +230,8 @@ const VehicleForm = () => {
 
   return (
     <AppLayout>
-      <Box>
+      <PageTransition>
+        <Box>
         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
             <Button
@@ -274,6 +276,7 @@ const VehicleForm = () => {
                     value={formData.make}
                     onChange={handleMakeChange}
                     required
+                    autoFocus
                   >
                     <MenuItem value="">
                       <em>Select a make</em>
@@ -509,7 +512,8 @@ const VehicleForm = () => {
           onClose={() => setUploadDialogOpen(false)}
           onDataExtracted={handleExtractedData}
         />
-      </Box>
+        </Box>
+      </PageTransition>
     </AppLayout>
   );
 };
