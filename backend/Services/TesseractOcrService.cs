@@ -1,6 +1,6 @@
 using Microsoft.Extensions.Configuration;
 using Microsoft.AspNetCore.Hosting;
-using Tesseract;
+using System.Diagnostics;
 using ImageMagick;
 using Docnet.Core;
 using Docnet.Core.Models;
@@ -10,6 +10,7 @@ namespace Backend.Services;
 public class TesseractOcrService : IOcrService
 {
     private readonly string _tesseractDataPath;
+    private readonly string _tesseractBinaryPath;
     private readonly string _language;
     private readonly ILogger<TesseractOcrService> _logger;
 
@@ -21,6 +22,7 @@ public class TesseractOcrService : IOcrService
         var ocrConfig = configuration.GetSection("Ocr");
         var configuredPath = ocrConfig["TesseractDataPath"] ?? "tessdata";
         _language = ocrConfig["Language"] ?? "eng";
+        _tesseractBinaryPath = ocrConfig["TesseractBinaryPath"] ?? "/opt/homebrew/bin/tesseract";
         _logger = logger;
 
         // Resolve path: if relative, make it relative to ContentRootPath
@@ -34,6 +36,13 @@ public class TesseractOcrService : IOcrService
         }
 
         _logger.LogInformation("Tesseract data path resolved to: {Path}", _tesseractDataPath);
+        _logger.LogInformation("Tesseract binary path: {Path}", _tesseractBinaryPath);
+
+        // Verify tesseract binary exists
+        if (!File.Exists(_tesseractBinaryPath))
+        {
+            throw new FileNotFoundException($"Tesseract binary not found at '{_tesseractBinaryPath}'. Install with: brew install tesseract");
+        }
 
         // Verify tessdata directory exists
         if (!Directory.Exists(_tesseractDataPath))
@@ -52,34 +61,28 @@ public class TesseractOcrService : IOcrService
 
     public async Task<string> ExtractTextAsync(Stream imageStream, string language = "eng")
     {
+        string? tempImagePath = null;
+
         try
         {
-            _logger.LogInformation("Starting text extraction from image stream");
+            _logger.LogInformation("Starting text extraction from image stream using Tesseract CLI");
 
             // Preprocess image for better OCR accuracy
             _logger.LogInformation("Preprocessing image...");
             var preprocessedBytes = await PreprocessImageAsync(imageStream);
             _logger.LogInformation("Image preprocessed, size: {Size} bytes", preprocessedBytes.Length);
 
-            // Use Tesseract to extract text
-            _logger.LogInformation("Initializing Tesseract engine with path: {Path}, language: {Language}", _tesseractDataPath, language);
-            using (var engine = new TesseractEngine(_tesseractDataPath, language, EngineMode.Default))
-            {
-                _logger.LogInformation("Loading image from memory...");
-                using (var img = Pix.LoadFromMemory(preprocessedBytes))
-                {
-                    _logger.LogInformation("Processing image with Tesseract...");
-                    using (var page = engine.Process(img))
-                    {
-                        var text = page.GetText();
-                        var confidence = page.GetMeanConfidence();
+            // Save preprocessed image to temporary file
+            tempImagePath = Path.Combine(Path.GetTempPath(), $"ocr_{Guid.NewGuid()}.png");
+            await File.WriteAllBytesAsync(tempImagePath, preprocessedBytes);
+            _logger.LogInformation("Saved preprocessed image to: {Path}", tempImagePath);
 
-                        _logger.LogInformation("OCR completed with confidence: {Confidence}, text length: {Length}", confidence, text?.Length ?? 0);
+            // Call Tesseract CLI
+            var extractedText = await RunTesseractCliAsync(tempImagePath, language);
 
-                        return text ?? string.Empty;
-                    }
-                }
-            }
+            _logger.LogInformation("OCR completed, text length: {Length}", extractedText?.Length ?? 0);
+
+            return extractedText ?? string.Empty;
         }
         catch (Exception ex)
         {
@@ -89,6 +92,71 @@ public class TesseractOcrService : IOcrService
                 _logger.LogError("Inner exception: {Type}, Message: {Message}", ex.InnerException.GetType().Name, ex.InnerException.Message);
             }
             throw new InvalidOperationException("Failed to extract text from image", ex);
+        }
+        finally
+        {
+            // Clean up temporary file
+            if (tempImagePath != null && File.Exists(tempImagePath))
+            {
+                try
+                {
+                    File.Delete(tempImagePath);
+                    _logger.LogInformation("Deleted temporary file: {Path}", tempImagePath);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogWarning(ex, "Failed to delete temporary file: {Path}", tempImagePath);
+                }
+            }
+        }
+    }
+
+    private async Task<string> RunTesseractCliAsync(string imagePath, string language)
+    {
+        try
+        {
+            var process = new Process
+            {
+                StartInfo = new ProcessStartInfo
+                {
+                    FileName = _tesseractBinaryPath,
+                    Arguments = $"\"{imagePath}\" stdout -l {language} --tessdata-dir \"{_tesseractDataPath}\"",
+                    RedirectStandardOutput = true,
+                    RedirectStandardError = true,
+                    UseShellExecute = false,
+                    CreateNoWindow = true
+                }
+            };
+
+            _logger.LogInformation("Running Tesseract CLI: {FileName} {Arguments}", process.StartInfo.FileName, process.StartInfo.Arguments);
+
+            process.Start();
+
+            var outputTask = process.StandardOutput.ReadToEndAsync();
+            var errorTask = process.StandardError.ReadToEndAsync();
+
+            await process.WaitForExitAsync();
+
+            var output = await outputTask;
+            var error = await errorTask;
+
+            if (process.ExitCode != 0)
+            {
+                _logger.LogError("Tesseract CLI failed with exit code {ExitCode}. Error: {Error}", process.ExitCode, error);
+                throw new InvalidOperationException($"Tesseract CLI failed: {error}");
+            }
+
+            if (!string.IsNullOrEmpty(error))
+            {
+                _logger.LogWarning("Tesseract CLI warnings: {Error}", error);
+            }
+
+            return output;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error running Tesseract CLI");
+            throw;
         }
     }
 

@@ -79,12 +79,16 @@ libtesseract50.dylib -> /opt/homebrew/lib/libtesseract.5.dylib
 
 ## Current Status
 
-❌ **OCR extraction still fails** with:
-```
-System.DllNotFoundException: Failed to find library "libleptonica-1.82.0.dylib" for platform x64.
-```
+✅ **OCR extraction now working!** - Successfully switched to Tesseract CLI wrapper approach.
 
-The fundamental issue is architectural incompatibility - the .NET package doesn't know how to find or load native libraries on macOS ARM.
+**Solution Implemented**: Option 3 - Use Tesseract via CLI Wrapper
+
+All 5 integration tests passing:
+- ✅ Authentication validation
+- ✅ File requirement validation
+- ✅ File type validation
+- ✅ Image OCR extraction (simple images)
+- ✅ PDF OCR extraction (2295 characters from sample registration document)
 
 ## Recommended Solutions
 
@@ -175,18 +179,50 @@ Monitor the [Tesseract NuGet package](https://www.nuget.org/packages/Tesseract/)
    - Add error handling for missing tesseract binary
 4. **Documentation**: Update CLAUDE.md with chosen solution and setup requirements
 
+## Implementation Details (CLI Wrapper Approach)
+
+### Changes Made
+
+1. **Updated TesseractOcrService.cs**:
+   - Removed dependency on Tesseract .NET package
+   - Implemented CLI wrapper using `Process.Start()`
+   - Saves preprocessed image to temp file
+   - Calls tesseract binary directly: `/opt/homebrew/bin/tesseract`
+   - Captures stdout for extracted text
+   - Maintains ImageMagick preprocessing (working well)
+
+2. **Removed Tesseract NuGet Package**:
+   - Removed `Tesseract` v5.2.0 from Backend.csproj
+   - No more native library compatibility issues
+
+3. **Added Configuration**:
+   - Added `TesseractBinaryPath` to appsettings.json
+   - Default: `/opt/homebrew/bin/tesseract`
+   - Can be customized for different environments
+
+### Key Benefits
+
+✅ Works on macOS ARM (Apple Silicon)
+✅ No native library loading issues
+✅ Uses system-installed Tesseract (always up to date)
+✅ Simple and maintainable
+✅ Full control over tesseract arguments
+✅ All existing functionality preserved
+
+### Requirements
+
+- Tesseract must be installed: `brew install tesseract`
+- Tesseract trained data files in `backend/tessdata/` directory
+- ImageMagick for image preprocessing: `brew install imagemagick`
+
 ## Test Commands
 
 ```bash
-# Run backend with library paths (won't fix test issues)
-cd backend
-./run-backend.sh
-
 # Run OCR integration tests
 cd backend
 dotnet test Backend.Tests/Backend.Tests.csproj --filter "RegistrationOcrTests"
 
-# Expected: 3 pass, 2 fail until OCR solution is implemented
+# Expected: All 5 tests passing ✅
 ```
 
 ## References
