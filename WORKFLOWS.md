@@ -3,6 +3,7 @@
 This document outlines development workflows, best practices, and patterns for working on the CarManagement project.
 
 ## Table of Contents
+- [AI Sub-Agent Workflow](#ai-sub-agent-workflow)
 - [Feature Design Documentation](#feature-design-documentation)
 - [Feature Completion Definition](#feature-completion-definition)
 - [Git Workflow](#git-workflow)
@@ -10,6 +11,168 @@ This document outlines development workflows, best practices, and patterns for w
 - [Frontend Development Workflow](#frontend-development-workflow)
 - [Before Committing - AI Checklist](#before-committing---ai-checklist)
 - [Database & Migration Best Practices](#database--migration-best-practices)
+
+## AI Sub-Agent Workflow
+
+**All new features follow a structured sub-agent workflow to ensure quality and proper review.**
+
+### Workflow Overview
+
+```
+┌─────────────────────────────────────────────────────────────────────────┐
+│                        NEW FEATURE REQUEST                               │
+└─────────────────────────────────────────────────────────────────────────┘
+                                    │
+                                    ▼
+┌─────────────────────────────────────────────────────────────────────────┐
+│  PHASE 1: PLANNING                                                       │
+│  ─────────────────                                                       │
+│  Sub-agent: Plan (runs in background)                                    │
+│  • Explores codebase and understands requirements                        │
+│  • Identifies affected files and dependencies                            │
+│  • Designs implementation approach                                       │
+│  • Creates detailed plan with steps                                      │
+└─────────────────────────────────────────────────────────────────────────┘
+                                    │
+                                    ▼
+┌─────────────────────────────────────────────────────────────────────────┐
+│  PHASE 2: USER REVIEW                                                    │
+│  ────────────────────                                                    │
+│  User reviews the plan and provides:                                     │
+│  • Approval to proceed                                                   │
+│  • Feedback for adjustments                                              │
+│  • Decision on complexity (simple vs complex task)                       │
+└─────────────────────────────────────────────────────────────────────────┘
+                                    │
+                    ┌───────────────┴───────────────┐
+                    │                               │
+                    ▼                               ▼
+┌───────────────────────────────┐   ┌───────────────────────────────┐
+│  PHASE 3A: IMPLEMENTATION     │   │  PHASE 3B: IMPLEMENTATION     │
+│  (Complex Tasks)              │   │  (Simple Tasks)               │
+│  ─────────────────────────    │   │  ─────────────────────────    │
+│  Sub-agent: senior-engineer   │   │  Sub-agent: feature-          │
+│  (runs in background)         │   │  implementer                  │
+│                               │   │  (runs in background)         │
+│  • Production-quality code    │   │                               │
+│  • Follows project patterns   │   │  • Quick implementation       │
+│  • Handles edge cases         │   │  • Follows existing patterns  │
+│  • Architectural decisions    │   │  • Straightforward changes    │
+└───────────────────────────────┘   └───────────────────────────────┘
+                    │                               │
+                    └───────────────┬───────────────┘
+                                    │
+                                    ▼
+┌─────────────────────────────────────────────────────────────────────────┐
+│  PHASE 4: CODE REVIEW                                                    │
+│  ────────────────────                                                    │
+│  Sub-agent: code-reviewer                                                │
+│  • Reviews all changes for quality and correctness                       │
+│  • Checks adherence to project standards                                 │
+│  • Identifies potential issues or improvements                           │
+│  • Verifies tests pass and coverage is adequate                          │
+└─────────────────────────────────────────────────────────────────────────┘
+                                    │
+                                    ▼
+┌─────────────────────────────────────────────────────────────────────────┐
+│                         FEATURE COMPLETE                                 │
+└─────────────────────────────────────────────────────────────────────────┘
+```
+
+### Phase Details
+
+#### Phase 1: Planning (Plan Sub-Agent)
+
+The planning sub-agent runs in the background to:
+- Thoroughly explore the codebase using search tools
+- Understand existing patterns and architecture
+- Identify all files that need to be created or modified
+- Design the implementation approach
+- Create a step-by-step implementation plan
+- Consider edge cases and potential issues
+
+**Output:** A detailed implementation plan for user review.
+
+#### Phase 2: User Review
+
+After the plan is ready, the user:
+- Reviews the proposed approach
+- Provides feedback or requests changes
+- Approves the plan to proceed
+- Decides if the task is simple (feature-implementer) or complex (senior-engineer)
+
+**Decision criteria for sub-agent selection:**
+| Criteria | feature-implementer | senior-engineer |
+|----------|---------------------|-----------------|
+| Scope | Single file or few files | Multiple files, cross-cutting |
+| Complexity | Straightforward changes | Architectural decisions needed |
+| Risk | Low risk of regressions | Higher risk, needs careful handling |
+| Patterns | Following existing patterns exactly | May need new patterns or abstractions |
+| Examples | Bug fixes, small features, UI tweaks | New features, refactoring, API design |
+
+#### Phase 3: Implementation
+
+**For Complex Tasks (senior-engineer):**
+- Implements production-quality code
+- Makes architectural decisions when needed
+- Handles edge cases and error conditions
+- Ensures proper testing coverage
+- Follows and extends project patterns appropriately
+
+**For Simple Tasks (feature-implementer):**
+- Quick, focused implementation
+- Follows established patterns exactly
+- Makes incremental, targeted changes
+- Ideal for bug fixes and small enhancements
+
+Both sub-agents run in the background, allowing you to continue other work.
+
+#### Phase 4: Code Review (code-reviewer Sub-Agent)
+
+After implementation is complete, the code reviewer:
+- Reviews all changes for quality and correctness
+- Checks adherence to project conventions and patterns
+- Identifies potential bugs or issues
+- Verifies tests pass
+- Provides actionable feedback without unnecessary nitpicking
+
+### When to Use This Workflow
+
+**Use the full workflow for:**
+- New features requiring multiple files
+- Database schema changes
+- API endpoint additions
+- Significant refactoring
+- Features requiring architectural decisions
+
+**Skip planning for:**
+- Typo fixes
+- Single-line bug fixes
+- Documentation updates
+- Very small, obvious changes
+
+### Example Usage
+
+```
+User: "Add a new endpoint to get vehicle statistics"
+
+1. Claude spawns Plan sub-agent (background)
+   → Plan agent explores codebase, designs approach
+   → Returns detailed implementation plan
+
+2. User reviews plan
+   → "Looks good, this is a complex feature - use senior-engineer"
+
+3. Claude spawns senior-engineer sub-agent (background)
+   → Implements the feature following the plan
+   → Creates tests, updates documentation
+
+4. Claude spawns code-reviewer sub-agent
+   → Reviews all changes
+   → Reports any issues or approves the implementation
+
+5. Feature complete - ready for commit
+```
 
 ## Feature Design Documentation
 

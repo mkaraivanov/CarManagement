@@ -21,6 +21,7 @@ import {
   Dashboard as DashboardIcon,
   Build,
   Close,
+  People,
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
@@ -43,6 +44,7 @@ const Navbar = () => {
     { label: 'Dashboard', icon: <DashboardIcon />, path: '/dashboard' },
     { label: 'Vehicles', icon: <DirectionsCar />, path: '/vehicles' },
     { label: 'Maintenance', icon: <Build />, path: '/maintenance' },
+    { label: 'Users', icon: <People />, path: '/users' },
   ];
 
   const drawer = (
@@ -113,6 +115,9 @@ const Navbar = () => {
               </Button>
               <Button color="inherit" onClick={() => navigate('/maintenance')}>
                 Maintenance
+              </Button>
+              <Button color="inherit" onClick={() => navigate('/users')}>
+                Users
               </Button>
             </Box>
             <OverdueBadge />

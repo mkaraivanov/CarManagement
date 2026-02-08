@@ -69,10 +69,23 @@ builder.Services.AddHostedService<Backend.Services.MaintenanceBackgroundService>
 builder.Services.AddCors(options =>
 {
     options.AddDefaultPolicy(policy =>
-        policy.WithOrigins("http://localhost:5173", "http://localhost:5175")
-              .AllowAnyHeader()
-              .AllowAnyMethod()
-              .AllowCredentials());
+    {
+        if (builder.Environment.IsDevelopment())
+        {
+            // Allow all origins in development (including mobile apps)
+            policy.AllowAnyOrigin()
+                  .AllowAnyHeader()
+                  .AllowAnyMethod();
+        }
+        else
+        {
+            // Restrict origins in production
+            policy.WithOrigins("http://localhost:5173", "http://localhost:5175")
+                  .AllowAnyHeader()
+                  .AllowAnyMethod()
+                  .AllowCredentials();
+        }
+    });
 });
 
 // Configure file upload limits
@@ -112,7 +125,11 @@ app.UseStaticFiles(new Microsoft.AspNetCore.Builder.StaticFileOptions
     RequestPath = "/files"
 });
 
-app.UseHttpsRedirection();
+// Only use HTTPS redirection in production (mobile apps in dev use HTTP)
+if (!app.Environment.IsDevelopment())
+{
+    app.UseHttpsRedirection();
+}
 
 app.UseAuthentication();
 app.UseAuthorization();

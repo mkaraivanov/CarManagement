@@ -5,11 +5,12 @@ This directory contains custom Claude Code skills for the CarManagement project.
 ## Available Skills
 
 ### `/build-all`
-**Description**: Builds all projects in the solution (backend + frontend)
+**Description**: Builds all projects in the solution (backend + web frontend + mobile frontend)
 
 **What it does**:
 - Builds the ASP.NET Core backend in Release mode
-- Builds the React frontend for production
+- Builds the React web frontend for production
+- Verifies mobile frontend dependencies are installed
 - Shows colored output for build status
 - Reports build locations
 
@@ -20,7 +21,35 @@ This directory contains custom Claude Code skills for the CarManagement project.
 
 **Output locations**:
 - Backend: `backend/bin/Release/net9.0/`
-- Frontend: `web-frontend/dist/`
+- Web Frontend: `web-frontend/dist/`
+- Mobile Frontend: Dependencies verified (builds through native tools)
+
+---
+
+### `/run-mobile`
+**Description**: Runs the mobile app on iOS or Android simulator
+
+**What it does**:
+- Checks if backend API is running
+- Installs npm dependencies if needed
+- Installs CocoaPods dependencies (iOS only) if needed
+- Starts Metro bundler in background
+- Builds and launches the app on specified platform
+
+**Usage**:
+```bash
+/run-mobile          # Runs on iOS (default)
+/run-mobile ios      # Runs on iOS explicitly
+/run-mobile android  # Runs on Android
+```
+
+**Prerequisites**:
+- Backend must be running: `cd backend && dotnet run`
+- iOS: macOS with Xcode and CocoaPods
+- Android: Android Studio with emulator running
+
+**First build**: Takes 3-5 minutes (compiles native code)
+**Subsequent builds**: ~2-3 minutes
 
 ---
 
@@ -51,12 +80,14 @@ This directory contains custom Claude Code skills for the CarManagement project.
    ```
    /build-all
    /test-all
+   /run-mobile [ios|android]
    ```
 
 2. **Manually**: You can also run the scripts directly:
    ```bash
    ./.claude/skills/build-all.sh
    ./.claude/skills/test-all.sh
+   ./.claude/skills/run-mobile.sh [ios|android]
    ```
 
 ## Adding New Skills

@@ -28,7 +28,7 @@ This project uses structured documentation to maintain clarity and organization:
   - **[`docs/adr/`](docs/adr/)** - Architecture Decision Records (ADRs)
 
 ### Quick Reference
-- **New features?** → Start with [`WORKFLOWS.md`](WORKFLOWS.md) → Feature Design Documentation
+- **New features?** → Start with [`WORKFLOWS.md`](WORKFLOWS.md) → AI Sub-Agent Workflow (Plan → Review → Implement → Code Review)
 - **Tests failing?** → Check [`TESTING.md`](TESTING.md)
 - **Errors?** → See [`TROUBLESHOOTING.md`](TROUBLESHOOTING.md)
 - **Backend API without UI?** → Document in [`INCOMPLETE_FEATURES.md`](INCOMPLETE_FEATURES.md)
@@ -326,6 +326,11 @@ git push origin main
 ### Development Workflows
 
 **See [`WORKFLOWS.md`](WORKFLOWS.md) for complete workflows including:**
+- **AI Sub-Agent Workflow** (primary workflow for new features):
+  1. **Plan** sub-agent (background) - designs implementation approach
+  2. **User Review** - approve plan, choose complexity level
+  3. **senior-engineer** or **feature-implementer** sub-agent (background) - implements the feature
+  4. **code-reviewer** sub-agent - reviews changes for quality
 - Feature Design Documentation process
 - Git workflow and branching strategy
 - Backend development workflow (entities, migrations, services)

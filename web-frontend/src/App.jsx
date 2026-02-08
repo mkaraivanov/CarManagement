@@ -9,6 +9,8 @@ import VehicleList from './pages/vehicles/VehicleList';
 import VehicleForm from './pages/vehicles/VehicleForm';
 import VehicleDetails from './pages/vehicles/VehicleDetails';
 import MaintenancePage from './pages/maintenance/MaintenancePage';
+import UserList from './pages/users/UserList';
+import UserForm from './pages/users/UserForm';
 import theme from './theme';
 
 function App() {
@@ -65,6 +67,22 @@ function App() {
               element={
                 <ProtectedRoute>
                   <MaintenancePage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/users"
+              element={
+                <ProtectedRoute>
+                  <UserList />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/users/:id/edit"
+              element={
+                <ProtectedRoute>
+                  <UserForm />
                 </ProtectedRoute>
               }
             />

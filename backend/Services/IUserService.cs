@@ -11,4 +11,8 @@ public interface IUserService
     Task<User?> GetUserByUsernameAsync(string username);
     Task<User?> GetUserByEmailAsync(string email);
     string GenerateJwtToken(User user, string secret, string issuer, string audience, int expirationHours);
+    Task<List<User>> GetAllUsersAsync();
+    Task<User?> UpdateUserAsync(Guid userId, UpdateUserRequest request);
+    Task<bool> DeleteUserAsync(Guid userId);
+    Task<UserStatistics> GetUserStatisticsAsync(Guid userId);
 }
