@@ -41,3 +41,7 @@ yarn-error.log*
 # Environment variables
 .env.local
 .env.*.local
+
+# Documentation backups
+CLAUDE.md.backup
+*.md.backup
