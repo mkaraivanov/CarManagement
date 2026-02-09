@@ -60,6 +60,105 @@ GET /api/users/me
 Authorization: Bearer <token>
 ```
 
+**Response 200:**
+```json
+{
+  "id": "guid",
+  "username": "string",
+  "email": "string",
+  "createdAt": "datetime"
+}
+```
+
+---
+
+## 👥 User Management Endpoints
+
+### Get All Users
+```http
+GET /api/users
+Authorization: Bearer <token>
+```
+
+**Response 200:** Array of users with statistics
+```json
+[
+  {
+    "id": "guid",
+    "username": "string",
+    "email": "string",
+    "createdAt": "datetime",
+    "statistics": {
+      "vehicleCount": 0,
+      "serviceRecordCount": 0,
+      "fuelRecordCount": 0
+    }
+  }
+]
+```
+
+### Get User by ID
+```http
+GET /api/users/{id}
+Authorization: Bearer <token>
+```
+
+**Response 200:**
+```json
+{
+  "id": "guid",
+  "username": "string",
+  "email": "string",
+  "createdAt": "datetime",
+  "statistics": {
+    "vehicleCount": 0,
+    "serviceRecordCount": 0,
+    "fuelRecordCount": 0
+  }
+}
+```
+
+**Response 404:** User not found
+
+### Update User
+```http
+PUT /api/users/{id}
+Authorization: Bearer <token>
+Content-Type: application/json
+
+{
+  "username": "string",  // optional
+  "email": "string"      // optional
+}
+```
+
+**Response 200:**
+```json
+{
+  "id": "guid",
+  "username": "string",
+  "email": "string",
+  "createdAt": "datetime"
+}
+```
+
+**Response 400:** Username or email already in use
+**Response 404:** User not found
+
+**Note:** Password cannot be changed through this endpoint.
+
+### Delete User
+```http
+DELETE /api/users/{id}
+Authorization: Bearer <token>
+```
+
+**Response 204:** User deleted successfully
+**Response 400:** Cannot delete your own account
+**Response 404:** User not found
+
+**Note:** Deleting a user will cascade delete all their vehicles, service records, and fuel records.
+
 ---
 
 ## 🚗 Vehicle Endpoints

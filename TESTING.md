@@ -207,6 +207,57 @@ Currently no automated frontend tests. Manual testing approach:
 
 ### Mobile Testing
 
+**Test Project Location:** `mobile-frontend/CarManagementMobile/__tests__/`
+
+**Running Tests:**
+```bash
+cd mobile-frontend/CarManagementMobile
+
+# Run all tests
+npm test
+
+# Run tests in watch mode (for development)
+npm test -- --watch
+
+# Run tests with coverage
+npm test -- --coverage
+
+# Run specific test file
+npm test -- userService.test.ts
+```
+
+### Mobile Test Infrastructure
+
+- **Jest** testing framework (configured for React Native)
+- **react-test-renderer** for component testing
+- **Mock** implementations for services, navigation, and context
+- Tests run in Node environment (no device/emulator needed)
+
+### Current Mobile Test Coverage
+
+**User Service Tests:**
+- getAll() - Fetches all users with statistics
+- getById(id) - Fetches specific user
+- update(id, data) - Updates user information
+- delete(id) - Deletes user account
+- Error handling for each method
+
+**User List Screen Tests:**
+- Rendering: loading states, user list display, empty states
+- User identification: "You" badge for current user
+- Statistics display: vehicle, service, and fuel counts
+- User interactions: edit navigation, delete confirmation
+- Self-delete prevention: current user cannot delete themselves
+- Date formatting and edge cases
+
+**User Form Screen Tests:**
+- Form rendering: loading, field population, info banner
+- Form validation: required fields, email format
+- User interactions: save, cancel, navigation
+- Error handling during save/load operations
+
+### Manual Mobile Testing
+
 ```bash
 cd mobile-frontend/CarManagementMobile
 
@@ -222,6 +273,18 @@ npm run ios
 # Make a change to a component and save
 # App should update without full restart
 ```
+
+**Mobile Test Checklist:**
+- [ ] Authentication flow (login, register, logout)
+- [ ] Vehicle management (list, add, edit, delete)
+- [ ] Service records (list, add, view)
+- [ ] Fuel records (list, add, view)
+- [ ] User management (list, edit, delete)
+- [ ] Navigation between screens
+- [ ] Error handling and alerts
+- [ ] Loading states
+- [ ] Pull-to-refresh functionality
+- [ ] Form validation
 
 ## Performance Testing
 

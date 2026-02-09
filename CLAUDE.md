@@ -7,7 +7,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 CarManagement is a full-stack vehicle management application with three main components:
 - **Backend**: ASP.NET Core 9.0 REST API with SQLite database
 - **Web Frontend**: React 19 + Vite + Material-UI
-- **Mobile Frontend**: React Native (basic setup, in progress)
+- **Mobile Frontend**: React Native with TypeScript (authentication, vehicles, service records, fuel records, maintenance, user management)
 
 ## Documentation Structure
 
@@ -28,12 +28,56 @@ This project uses structured documentation to maintain clarity and organization:
   - **[`docs/adr/`](docs/adr/)** - Architecture Decision Records (ADRs)
 
 ### Quick Reference
-- **New features?** → Start with [`WORKFLOWS.md`](WORKFLOWS.md) → AI Sub-Agent Workflow (Plan → Review → Implement → Code Review)
+- **New features?** → Start with [`WORKFLOWS.md`](WORKFLOWS.md) → AI Sub-Agent Workflow (Plan → Review → Implement → QA → Code Review)
 - **Tests failing?** → Check [`TESTING.md`](TESTING.md)
 - **Errors?** → See [`TROUBLESHOOTING.md`](TROUBLESHOOTING.md)
 - **Backend API without UI?** → Document in [`INCOMPLETE_FEATURES.md`](INCOMPLETE_FEATURES.md)
 
 **See [`docs/README.md`](docs/README.md) for complete documentation guidelines.**
+
+## ⚠️ MANDATORY: AI Sub-Agent Workflow for New Features
+
+**🚨 CRITICAL: Before implementing ANY new feature, you MUST use the AI Sub-Agent Workflow!**
+
+**When to use this workflow (ALWAYS for these):**
+- ✅ Adding new features (any size)
+- ✅ Adding new API endpoints
+- ✅ Adding/modifying database entities
+- ✅ Significant refactoring
+- ✅ Bug fixes affecting multiple files
+- ✅ Any work requiring architectural decisions
+
+**Only skip for:**
+- ❌ Single-line typo fixes
+- ❌ Documentation-only updates
+- ❌ Obvious one-line bug fixes
+
+**The 5-Phase Process:**
+
+```
+1. PLAN (background)     → Spawn Plan sub-agent to design approach
+2. USER REVIEW           → Present plan, get approval & complexity decision
+3. IMPLEMENT (background) → Spawn senior-software-engineer OR regular-software-engineer
+4. QA VALIDATION (background) → AUTOMATICALLY spawn qa-engineer (mandatory)
+5. CODE REVIEW (background)   → AUTOMATICALLY spawn code-reviewer (mandatory)
+```
+
+**🚨 CRITICAL for Claude: Phases 4 & 5 are AUTOMATIC**
+- After implementation (Phase 3) completes → **IMMEDIATELY spawn qa-engineer** (don't wait for user)
+- After QA approves → **IMMEDIATELY spawn code-reviewer** (don't wait for user)
+- These are NOT optional - they MUST be executed for every feature/fix
+- Only skip for: documentation-only, typos, config formatting
+
+**Complete details:** See [`WORKFLOWS.md`](WORKFLOWS.md) → AI Sub-Agent Workflow
+
+**Why this matters:**
+- Runs in background (you can do other work)
+- Provides structured review points
+- Ensures quality through dedicated QA validation and code review
+- Separates planning from implementation
+- **QA and Code Review phases are AUTOMATIC** - no need to request them
+
+---
 
 ## Development Commands
 
@@ -221,7 +265,10 @@ Authorization: Bearer <jwt_token>
 
 ### When Adding New Entities
 
-**FIRST: Create a feature design doc in `docs/features/` if this is a significant change!**
+**⚠️ STEP 0: Use the AI Sub-Agent Workflow! (See section above)**
+- Spawn Plan sub-agent → Get user approval → Spawn implementation sub-agent → Code review
+
+**THEN: Create a feature design doc in `docs/features/` if this is a significant change!**
 
 **See [`WORKFLOWS.md`](WORKFLOWS.md) → Backend Development Workflow for complete steps.**
 
@@ -239,7 +286,10 @@ Authorization: Bearer <jwt_token>
 
 ### When Adding New API Endpoints
 
-**FIRST: Ensure there's a feature design doc in `docs/features/` for this endpoint!**
+**⚠️ STEP 0: Use the AI Sub-Agent Workflow! (See section above)**
+- Spawn Plan sub-agent → Get user approval → Spawn implementation sub-agent → Code review
+
+**THEN: Ensure there's a feature design doc in `docs/features/` for this endpoint!**
 
 **See [`WORKFLOWS.md`](WORKFLOWS.md) → When Adding New API Endpoints for complete workflow.**
 
@@ -252,6 +302,9 @@ Authorization: Bearer <jwt_token>
 - Add to [`INCOMPLETE_FEATURES.md`](INCOMPLETE_FEATURES.md) if backend-only
 
 ### Frontend API Integration
+
+**⚠️ STEP 0: Use the AI Sub-Agent Workflow! (See section above)**
+- Spawn Plan sub-agent → Get user approval → Spawn implementation sub-agent → Code review
 
 **See [`WORKFLOWS.md`](WORKFLOWS.md) → Frontend Development Workflow for complete patterns.**
 
@@ -329,8 +382,9 @@ git push origin main
 - **AI Sub-Agent Workflow** (primary workflow for new features):
   1. **Plan** sub-agent (background) - designs implementation approach
   2. **User Review** - approve plan, choose complexity level
-  3. **senior-engineer** or **feature-implementer** sub-agent (background) - implements the feature
-  4. **code-reviewer** sub-agent - reviews changes for quality
+  3. **senior-software-engineer** or **regular-software-engineer** sub-agent (background) - implements the feature
+  4. **qa-engineer** sub-agent (background) - validates functionality, tests, and edge cases
+  5. **code-reviewer** sub-agent (background) - reviews code quality and maintainability
 - Feature Design Documentation process
 - Git workflow and branching strategy
 - Backend development workflow (entities, migrations, services)

@@ -51,26 +51,39 @@ This document outlines development workflows, best practices, and patterns for w
 │  PHASE 3A: IMPLEMENTATION     │   │  PHASE 3B: IMPLEMENTATION     │
 │  (Complex Tasks)              │   │  (Simple Tasks)               │
 │  ─────────────────────────    │   │  ─────────────────────────    │
-│  Sub-agent: senior-engineer   │   │  Sub-agent: feature-          │
-│  (runs in background)         │   │  implementer                  │
-│                               │   │  (runs in background)         │
-│  • Production-quality code    │   │                               │
-│  • Follows project patterns   │   │  • Quick implementation       │
-│  • Handles edge cases         │   │  • Follows existing patterns  │
-│  • Architectural decisions    │   │  • Straightforward changes    │
+│  Sub-agent: senior-software-  │   │  Sub-agent: regular-software- │
+│  engineer                     │   │  engineer                     │
+│  (runs in background)         │   │  (runs in background)         │
+│                               │   │                               │
+│  • Production-quality code    │   │  • Quick implementation       │
+│  • Follows project patterns   │   │  • Follows existing patterns  │
+│  • Handles edge cases         │   │  • Straightforward changes    │
+│  • Architectural decisions    │   │  • Incremental changes        │
 └───────────────────────────────┘   └───────────────────────────────┘
                     │                               │
                     └───────────────┬───────────────┘
                                     │
                                     ▼
 ┌─────────────────────────────────────────────────────────────────────────┐
-│  PHASE 4: CODE REVIEW                                                    │
+│  PHASE 4: QA VALIDATION                                                  │
+│  ──────────────────                                                      │
+│  Sub-agent: qa-engineer (runs in background)                             │
+│  • Validates functional correctness                                      │
+│  • Verifies test coverage is adequate                                    │
+│  • Identifies missing edge case tests                                    │
+│  • Assesses regression risk                                              │
+│  • Ensures all relevant tests pass                                       │
+└─────────────────────────────────────────────────────────────────────────┘
+                                    │
+                                    ▼
+┌─────────────────────────────────────────────────────────────────────────┐
+│  PHASE 5: CODE REVIEW                                                    │
 │  ────────────────────                                                    │
-│  Sub-agent: code-reviewer                                                │
-│  • Reviews all changes for quality and correctness                       │
-│  • Checks adherence to project standards                                 │
-│  • Identifies potential issues or improvements                           │
-│  • Verifies tests pass and coverage is adequate                          │
+│  Sub-agent: code-reviewer (runs in background)                           │
+│  • Reviews all changes for code quality                                  │
+│  • Checks adherence to project standards and patterns                    │
+│  • Identifies maintainability issues                                     │
+│  • Suggests improvements to code structure                               │
 └─────────────────────────────────────────────────────────────────────────┘
                                     │
                                     ▼
@@ -99,10 +112,10 @@ After the plan is ready, the user:
 - Reviews the proposed approach
 - Provides feedback or requests changes
 - Approves the plan to proceed
-- Decides if the task is simple (feature-implementer) or complex (senior-engineer)
+- Decides if the task is simple (regular-software-engineer) or complex (senior-software-engineer)
 
 **Decision criteria for sub-agent selection:**
-| Criteria | feature-implementer | senior-engineer |
+| Criteria | regular-software-engineer | senior-software-engineer |
 |----------|---------------------|-----------------|
 | Scope | Single file or few files | Multiple files, cross-cutting |
 | Complexity | Straightforward changes | Architectural decisions needed |
@@ -112,14 +125,14 @@ After the plan is ready, the user:
 
 #### Phase 3: Implementation
 
-**For Complex Tasks (senior-engineer):**
+**For Complex Tasks (senior-software-engineer):**
 - Implements production-quality code
 - Makes architectural decisions when needed
 - Handles edge cases and error conditions
 - Ensures proper testing coverage
 - Follows and extends project patterns appropriately
 
-**For Simple Tasks (feature-implementer):**
+**For Simple Tasks (regular-software-engineer):**
 - Quick, focused implementation
 - Follows established patterns exactly
 - Makes incremental, targeted changes
@@ -127,14 +140,79 @@ After the plan is ready, the user:
 
 Both sub-agents run in the background, allowing you to continue other work.
 
-#### Phase 4: Code Review (code-reviewer Sub-Agent)
+**⚠️ IMPORTANT**: After implementation completes, Claude must AUTOMATICALLY spawn the qa-engineer sub-agent (Phase 4). Do not wait for user request - this is mandatory.
 
-After implementation is complete, the code reviewer:
-- Reviews all changes for quality and correctness
+#### Phase 4: QA Validation (qa-engineer Sub-Agent)
+
+After implementation is complete, the QA engineer validates the change **before** code review:
+
+**Why QA comes first:**
+- Catches functional issues and missing tests early
+- Ensures tests pass before code review begins
+- Validates edge cases and error handling
+- Assesses regression risk to existing features
+- Code reviewer doesn't waste time reviewing broken/untested code
+
+**What the QA engineer does:**
+- **Verifies test coverage**: Ensures new tests exist for the changes
+- **Identifies missing tests**: Spots edge cases and scenarios not covered by tests
+- **Runs all relevant tests**: Confirms backend and frontend tests pass
+- **Assesses regression risk**: Evaluates potential impact on existing functionality
+- **Validates error handling**: Checks that errors are handled gracefully
+- **Thinks like a user**: Identifies usability issues and unexpected behaviors
+
+**QA validation is CRITICAL for:**
+- New features (especially user-facing features)
+- Bug fixes to ensure the fix works and doesn't introduce regressions
+- Changes to authentication, authorization, or data persistence
+- API endpoint additions or modifications
+- Database schema changes
+
+**Output**: Structured review with risk assessment, test coverage analysis, and approval status.
+
+**⚠️ IMPORTANT**: After QA engineer approves (or user addresses QA concerns), Claude must AUTOMATICALLY spawn the code-reviewer sub-agent (Phase 5). Do not wait for user request - this is mandatory.
+
+#### Phase 5: Code Review (code-reviewer Sub-Agent)
+
+After QA validation approves the changes, the code reviewer evaluates code quality:
+
+**What the code reviewer does:**
+- Reviews code for quality, readability, and maintainability
 - Checks adherence to project conventions and patterns
-- Identifies potential bugs or issues
-- Verifies tests pass
-- Provides actionable feedback without unnecessary nitpicking
+- Identifies potential code smells or design issues
+- Suggests improvements to code structure and organization
+- Provides actionable, constructive feedback
+
+**Why code review comes after QA:**
+- No point reviewing code that doesn't work or lacks tests
+- QA has already validated functionality and test coverage
+- Code reviewer can focus purely on code quality and maintainability
+- Reduces wasted effort reviewing code that needs functional fixes
+
+---
+
+### 🚨 CRITICAL: Automatic Phase Execution
+
+**After implementation completes, Claude MUST automatically:**
+
+1. ✅ **Spawn qa-engineer sub-agent** (background) immediately after implementation
+   - Do NOT wait for user to ask
+   - Do NOT skip this phase
+   - This is MANDATORY for all feature implementations and bug fixes
+
+2. ✅ **After QA approves**, spawn code-reviewer sub-agent (background)
+   - Do NOT wait for user to ask
+   - Do NOT skip this phase
+   - This is MANDATORY for all feature implementations
+
+**These phases are NOT optional** - they are part of the standard workflow and must be executed proactively to ensure code quality.
+
+**Exception**: Only skip QA and Code Review for:
+- Documentation-only changes (README, comments)
+- Trivial typo fixes
+- Configuration file formatting (no logic)
+
+---
 
 ### When to Use This Workflow
 
@@ -161,17 +239,28 @@ User: "Add a new endpoint to get vehicle statistics"
    → Returns detailed implementation plan
 
 2. User reviews plan
-   → "Looks good, this is a complex feature - use senior-engineer"
+   → "Looks good, this is a complex feature - use senior-software-engineer"
 
-3. Claude spawns senior-engineer sub-agent (background)
+3. Claude spawns senior-software-engineer sub-agent (background)
    → Implements the feature following the plan
    → Creates tests, updates documentation
+   → Implementation completes
 
-4. Claude spawns code-reviewer sub-agent
-   → Reviews all changes
-   → Reports any issues or approves the implementation
+4. Claude AUTOMATICALLY spawns qa-engineer sub-agent (background) ⭐
+   → No user prompt needed - this is automatic
+   → Validates functional correctness
+   → Verifies test coverage and runs all tests
+   → Identifies edge cases and regression risks
+   → Approves if quality standards are met
 
-5. Feature complete - ready for commit
+5. Claude AUTOMATICALLY spawns code-reviewer sub-agent (background) ⭐
+   → No user prompt needed - this is automatic
+   → Reviews code quality and maintainability
+   → Checks adherence to project patterns
+   → Provides constructive feedback
+   → Approves if code meets standards
+
+6. Feature complete - ready for commit
 ```
 
 ## Feature Design Documentation
