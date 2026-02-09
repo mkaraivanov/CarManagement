@@ -95,33 +95,44 @@ What are the trade-offs?
 ### 1. Before Starting a Feature
 
 ```bash
-# Copy template
+# 1. Create feature branch (MANDATORY - see WORKFLOWS.md)
+git checkout main
+git pull origin main
+git checkout -b feature/my-new-feature
+
+# 2. Copy template
 cp docs/features/_TEMPLATE.md docs/features/my-new-feature.md
 
-# Edit the new file with your feature design
+# 3. Edit the new file with your feature design
 # Fill in all sections: Context, Technology Decisions, Implementation Phases, etc.
 
-# Commit the design doc
+# 4. Commit the design doc to your feature branch
 git add docs/features/my-new-feature.md
 git commit -m "Add design doc for [feature name]"
+git push origin feature/my-new-feature
 ```
 
 ### 2. During Implementation
 
+- Work on your feature branch (never on `main`)
 - Update the design doc as you discover new requirements
 - Check off completed tasks in the Implementation Phases section
 - Document any deviations from the original plan
+- Commit frequently: `git push origin feature/my-new-feature`
 
 ### 3. After Completion
 
 - Update status to ✅ Complete
 - Add any "Lessons Learned" section if needed
 - Update related docs (API.md, CLAUDE.md, README.md)
+- Merge feature branch to main (via PR or local merge)
+- Delete feature branch after merging
 
 ## Integration with CLAUDE.md
 
 **CLAUDE.md** is the AI assistant's guide to:
 - Development workflows and best practices
+- **MANDATORY feature branch workflow** (all work on feature branches, never on `main`)
 - Coding standards and patterns
 - Common mistakes to avoid
 - Git workflow and commit practices
@@ -129,10 +140,11 @@ git commit -m "Add design doc for [feature name]"
 **Feature docs** are detailed implementation plans for specific features.
 
 **Relationship:**
-- CLAUDE.md references this docs structure
+- CLAUDE.md references this docs structure and mandates feature branch workflow
 - Feature docs follow patterns described in CLAUDE.md
 - CLAUDE.md stays focused on "how to work" (workflows)
 - Feature docs focus on "what to build" (specifications)
+- Both emphasize working on feature branches, never directly on `main`
 
 ## Best Practices
 
