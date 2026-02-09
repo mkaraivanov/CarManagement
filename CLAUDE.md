@@ -349,21 +349,31 @@ This project is a solo development effort with AI assistance. These practices he
 
 **Test workflow:**
 ```bash
+# 0. Ensure you're on a feature branch (not main!)
+git checkout -b feature/your-feature-name  # If not already on a branch
+
 # 1. Make your changes
 
 # 2. Run affected tests
 cd backend && dotnet test  # If you changed backend
 cd web-frontend && npm test -- --run  # If you changed frontend
 
-# 3. If all tests pass, commit
+# 3. If all tests pass, commit to your feature branch
 git add .
 git commit -m "Your message"
+git push origin feature/your-feature-name
 
-# 4. Run ALL tests before pushing
+# 4. Run ALL tests before merging to main
 cd backend && dotnet test && cd ../web-frontend && npm test -- --run
 
-# 5. If all tests pass, push
+# 5. If all tests pass, create PR or merge to main
+git checkout main && git pull origin main
+git merge feature/your-feature-name
 git push origin main
+
+# 6. Clean up feature branch
+git branch -d feature/your-feature-name
+git push origin --delete feature/your-feature-name
 ```
 
 **Current test coverage:**
@@ -385,12 +395,44 @@ git push origin main
   3. **senior-software-engineer** or **regular-software-engineer** sub-agent (background) - implements the feature
   4. **qa-engineer** sub-agent (background) - validates functionality, tests, and edge cases
   5. **code-reviewer** sub-agent (background) - reviews code quality and maintainability
+- **🚨 MANDATORY: Feature Branch Workflow** - ALL changes must be in feature branches
 - Feature Design Documentation process
-- Git workflow and branching strategy
+- Git workflow and branching strategy (feature/, fix/, refactor/ branches)
 - Backend development workflow (entities, migrations, services)
 - Frontend development workflow (components, services, API integration)
 - Before Committing - AI Checklist
 - Database & migration best practices
+
+### 🚨 Git Workflow: Feature Branches Are MANDATORY
+
+**ALL development work MUST be done in feature branches - never commit directly to `main`.**
+
+**Quick workflow:**
+```bash
+# Start new work
+git checkout main && git pull origin main
+git checkout -b feature/your-feature-name
+
+# Make changes and commit
+git add .
+git commit -m "Descriptive message"
+git push origin feature/your-feature-name
+
+# After feature is complete and tested, merge via PR or:
+git checkout main && git pull origin main
+git merge feature/your-feature-name
+git push origin main
+git branch -d feature/your-feature-name
+```
+
+**Branch naming conventions:**
+- `feature/` - New features
+- `fix/` - Bug fixes
+- `refactor/` - Code refactoring
+- `docs/` - Documentation updates
+- `test/` - Test additions/fixes
+
+**See [`WORKFLOWS.md`](WORKFLOWS.md) → Git Workflow for complete details.**
 
 ### Security Best Practices
 

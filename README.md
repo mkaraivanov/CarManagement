@@ -131,6 +131,23 @@ Edit `backend/appsettings.json`:
 - Database: `Data Source=carmanagement.db`
 - JWT settings (⚠️ change secret for production!)
 
+## 🤝 Contributing
+
+**Contributions are welcome!** Please read our [Contributing Guide](CONTRIBUTING.md) before submitting changes.
+
+**IMPORTANT:** All contributions must use feature branches - direct commits to `main` are not allowed.
+
+Quick workflow:
+```bash
+git checkout main && git pull origin main
+git checkout -b feature/your-feature
+# Make changes, commit, push
+git push origin feature/your-feature
+# Create Pull Request
+```
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) for complete guidelines.
+
 ## 📝 License
 
 MIT

@@ -16,12 +16,27 @@ This document outlines development workflows, best practices, and patterns for w
 
 **All new features follow a structured sub-agent workflow to ensure quality and proper review.**
 
+**🚨 PREREQUISITE: Before starting ANY feature work, create a feature branch!**
+
+```bash
+# Step 0: Create feature branch (MANDATORY)
+git checkout main
+git pull origin main
+git checkout -b feature/your-feature-name
+```
+
+**NEVER work directly on `main` - all work must be in feature branches.**
+
 ### Workflow Overview
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────┐
 │                        NEW FEATURE REQUEST                               │
 └─────────────────────────────────────────────────────────────────────────┘
+                                    │
+                                    ▼
+                  🚨 CREATE FEATURE BRANCH FIRST! 🚨
+                git checkout -b feature/your-feature-name
                                     │
                                     ▼
 ┌─────────────────────────────────────────────────────────────────────────┐
@@ -234,6 +249,11 @@ After QA validation approves the changes, the code reviewer evaluates code quali
 ```
 User: "Add a new endpoint to get vehicle statistics"
 
+0. Claude creates feature branch ⭐
+   → git checkout main && git pull origin main
+   → git checkout -b feature/add-vehicle-statistics
+   → CRITICAL: All work happens on this branch, not main
+
 1. Claude spawns Plan sub-agent (background)
    → Plan agent explores codebase, designs approach
    → Returns detailed implementation plan
@@ -244,6 +264,7 @@ User: "Add a new endpoint to get vehicle statistics"
 3. Claude spawns senior-software-engineer sub-agent (background)
    → Implements the feature following the plan
    → Creates tests, updates documentation
+   → Commits to feature branch: git push origin feature/add-vehicle-statistics
    → Implementation completes
 
 4. Claude AUTOMATICALLY spawns qa-engineer sub-agent (background) ⭐
@@ -252,6 +273,19 @@ User: "Add a new endpoint to get vehicle statistics"
    → Verifies test coverage and runs all tests
    → Identifies edge cases and regression risks
    → Approves if quality standards are met
+
+5. Claude AUTOMATICALLY spawns code-reviewer sub-agent (background) ⭐
+   → No user prompt needed - this is automatic
+   → Reviews code quality and maintainability
+   → Checks adherence to project patterns
+   → Provides constructive feedback
+   → Approves if code meets standards
+
+6. Feature complete on branch - ready to merge
+   → Option 1 (Recommended): Create PR from feature branch to main
+   → Option 2: git checkout main && git merge feature/add-vehicle-statistics && git push origin main
+   → Clean up: git branch -d feature/add-vehicle-statistics
+```
 
 5. Claude AUTOMATICALLY spawns code-reviewer sub-agent (background) ⭐
    → No user prompt needed - this is automatic
@@ -293,12 +327,19 @@ User: "Add a new endpoint to get vehicle statistics"
 
 **Before Starting New Features:**
 ```bash
-# Create feature design document
+# 1. Create a feature branch
+git checkout main
+git pull origin main
+git checkout -b feature/my-feature-name
+
+# 2. Create feature design document
 cp docs/features/_TEMPLATE.md docs/features/my-feature-name.md
 # Fill in all sections before coding
-# Commit the design doc first
+
+# 3. Commit the design doc first
 git add docs/features/my-feature-name.md
 git commit -m "Add design doc for [feature name]"
+git push origin feature/my-feature-name
 ```
 
 ## Feature Completion Definition
@@ -322,16 +363,129 @@ git commit -m "Add design doc for [feature name]"
 
 ## Git Workflow
 
-**Branching Strategy:**
-- Create feature branches for significant changes: `feature/add-fuel-ui`, `fix/auth-bug`, `refactor/service-layer`
-- Keeps `main` branch clean and makes it easier to abandon unsuccessful experiments
-- Can push to `main` directly for small fixes; use branches for larger features
-- Delete branches after merging or abandoning
+### 🚨 CRITICAL: Feature Branch Workflow (MANDATORY)
 
-**Commit Practices:**
-- Commit when code works and is tested (not broken code)
-- Clear commit messages describing what and why
-- Test end-to-end before pushing
+**ALL changes must be developed in feature branches - direct commits to `main` are not allowed.**
+
+### Branch Naming Conventions
+
+Use descriptive branch names with prefixes:
+
+- `feature/` - New features (e.g., `feature/add-fuel-ui`, `feature/vehicle-export`)
+- `fix/` - Bug fixes (e.g., `fix/auth-token-expiry`, `fix/mileage-calculation`)
+- `refactor/` - Code refactoring (e.g., `refactor/service-layer`, `refactor/api-responses`)
+- `docs/` - Documentation updates (e.g., `docs/update-api-guide`, `docs/add-testing-docs`)
+- `test/` - Test additions/fixes (e.g., `test/add-vehicle-tests`, `test/fix-auth-tests`)
+
+**Branch name format:** `<prefix>/<descriptive-name>`
+
+### Creating a Feature Branch
+
+**Before starting ANY work:**
+
+```bash
+# 1. Ensure you're on main and it's up to date
+git checkout main
+git pull origin main
+
+# 2. Create and switch to a new feature branch
+git checkout -b feature/your-feature-name
+
+# Example: Adding fuel records UI
+git checkout -b feature/add-fuel-records-ui
+
+# Example: Fixing authentication bug
+git checkout -b fix/jwt-token-refresh
+```
+
+### Working on Your Feature Branch
+
+```bash
+# 1. Make your changes
+
+# 2. Stage and commit changes frequently
+git add .
+git commit -m "Clear commit message describing what and why"
+
+# 3. Push your branch to origin
+git push origin feature/your-feature-name
+
+# If it's your first push on this branch:
+git push -u origin feature/your-feature-name
+```
+
+### Merging Your Feature Branch
+
+**Option 1: Via Pull Request (Recommended)**
+
+1. Push your feature branch: `git push origin feature/your-feature-name`
+2. Create a Pull Request on GitHub from your feature branch to `main`
+3. Review changes, wait for CI/CD checks (if configured)
+4. Merge the PR on GitHub
+5. Delete the feature branch after merging
+6. Locally: `git checkout main && git pull origin main`
+
+**Option 2: Local Merge (Quick Fixes Only)**
+
+```bash
+# 1. Ensure your feature branch is clean and tested
+git status
+
+# 2. Switch to main and update it
+git checkout main
+git pull origin main
+
+# 3. Merge your feature branch
+git merge feature/your-feature-name
+
+# 4. Push to main
+git push origin main
+
+# 5. Delete the feature branch (local and remote)
+git branch -d feature/your-feature-name
+git push origin --delete feature/your-feature-name
+```
+
+### Branch Lifecycle
+
+1. **Create**: `git checkout -b feature/name`
+2. **Develop**: Make changes, commit frequently
+3. **Push**: `git push origin feature/name` (keeps backup, enables collaboration)
+4. **Test**: Ensure all tests pass, code works end-to-end
+5. **Merge**: Via PR or local merge to `main`
+6. **Delete**: Remove branch after merging
+
+### Commit Practices
+
+- **Commit when code works and is tested** (not broken code)
+- **Clear commit messages** describing what and why
+  - Good: `"Add fuel efficiency calculation service method"`
+  - Good: `"Fix authentication token expiry bug in AuthContext"`
+  - Bad: `"Update files"`, `"Fix bug"`, `"WIP"`
+- **Test end-to-end before pushing**
+- **Push to your feature branch frequently** for backup and collaboration
+
+### Why Feature Branches Are Mandatory
+
+- ✅ Keeps `main` branch stable and production-ready
+- ✅ Allows multiple features to be developed in parallel
+- ✅ Makes it easy to abandon unsuccessful experiments without affecting `main`
+- ✅ Enables proper code review via Pull Requests
+- ✅ Provides clear history of what changed and why
+- ✅ Reduces merge conflicts by isolating changes
+- ✅ Enables CI/CD workflows with proper testing before merging
+
+### For AI Agents
+
+**When implementing features:**
+
+1. ✅ **Always create a feature branch first** - never work directly on `main`
+2. ✅ **Use descriptive branch names** with appropriate prefixes
+3. ✅ **Commit frequently** with clear messages
+4. ✅ **Push to feature branch** to back up work
+5. ✅ **Run tests before pushing** to ensure quality
+6. ✅ **Use `report_progress`** to commit and push to the feature branch
+7. ✅ After feature is complete and tested, **create a PR** for merging to `main`
 
 ## Backend Development Workflow
 
