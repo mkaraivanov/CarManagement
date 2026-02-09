@@ -10,7 +10,6 @@
 - ✅ Adding/modifying database entities
 - ✅ Significant refactoring
 - ✅ Bug fixes affecting multiple files
-- ✅ Any work requiring architectural decisions
 
 **Only skip for:**
 - ❌ Single-line typo fixes
@@ -20,11 +19,11 @@
 ## The 5-Phase Process
 
 ```
-1. PLAN (background)     → Spawn Plan sub-agent to design approach
-2. USER REVIEW           → Present plan, get approval & complexity decision
-3. IMPLEMENT (background) → Spawn senior-software-engineer OR regular-software-engineer
-4. QA VALIDATION (background) → AUTOMATICALLY spawn qa-engineer (mandatory)
-5. CODE REVIEW (background)   → AUTOMATICALLY spawn code-reviewer (mandatory)
+1. PLAN (background)           → Spawn plan agent
+2. USER REVIEW                 → Get approval & complexity decision
+3. IMPLEMENT (background)      → Spawn implementation agent
+4. QA VALIDATION (background)  → AUTOMATICALLY spawn qa-engineer ⭐
+5. CODE REVIEW (background)    → AUTOMATICALLY spawn code-reviewer ⭐
 ```
 
 ## 🚨 CRITICAL: Phases 4 & 5 are AUTOMATIC
@@ -32,111 +31,78 @@
 **After implementation (Phase 3) completes:**
 - **IMMEDIATELY spawn qa-engineer** (don't wait for user)
 - After QA approves → **IMMEDIATELY spawn code-reviewer** (don't wait for user)
-- These are NOT optional - they MUST be executed for every feature/fix
+- These are NOT optional - MUST be executed for every feature/fix
 - Only skip for: documentation-only, typos, config formatting
 
-## Why This Matters
+## Agent-Specific Documentation
 
-- Runs in background (you can do other work)
-- Provides structured review points
-- Ensures quality through dedicated QA validation and code review
-- Separates planning from implementation
-- **QA and Code Review phases are AUTOMATIC** - no need to request them
+Each agent has dedicated context documentation:
 
-## Workflow Details
+- **Phase 1 (Planning)**: See @agents/plan-agent.md
+- **Phase 3 (Implementation)**: See @agents/implementation-agent.md
+- **Phase 4 (QA)**: See @agents/qa-agent.md
+- **Phase 5 (Code Review)**: See @agents/code-reviewer-agent.md
 
-### Phase 1: Planning (Plan Sub-Agent)
+## Quick Phase Overview
 
-The planning sub-agent runs in the background to:
-- Thoroughly explore the codebase using search tools
-- Understand existing patterns and architecture
-- Identify all files that need to be created or modified
-- Design the implementation approach
-- Create a step-by-step implementation plan
-
-**Output:** A detailed implementation plan for user review.
+### Phase 1: Plan Agent
+- Explores codebase thoroughly
+- Identifies all affected files
+- Designs implementation approach
+- Creates step-by-step plan
 
 ### Phase 2: User Review
-
-After the plan is ready, the user:
-- Reviews the proposed approach
-- Provides feedback or requests changes
-- Approves the plan to proceed
-- Decides: simple task (regular-software-engineer) or complex task (senior-software-engineer)
+User decides:
+- Approve or request changes
+- Choose: `regular-software-engineer` (simple) or `senior-software-engineer` (complex)
 
 **Decision criteria:**
-| Criteria | regular-software-engineer | senior-software-engineer |
-|----------|---------------------|-----------------|
-| Scope | Single file or few files | Multiple files, cross-cutting |
-| Complexity | Straightforward changes | Architectural decisions needed |
-| Risk | Low risk of regressions | Higher risk, needs careful handling |
-| Patterns | Following existing patterns exactly | May need new patterns or abstractions |
+| Criteria | regular | senior |
+|----------|---------|--------|
+| Scope | Single/few files | Multiple files |
+| Complexity | Straightforward | Architectural decisions |
+| Risk | Low | High |
 
-### Phase 3: Implementation
+### Phase 3: Implementation Agent
+- Follows the approved plan
+- Matches existing patterns
+- Writes clean, tested code
+- Runs in background
 
-**For Complex Tasks (senior-software-engineer):**
-- Implements production-quality code
-- Makes architectural decisions when needed
-- Handles edge cases and error conditions
-- Ensures proper testing coverage
+**⚠️ After completion → AUTOMATICALLY spawn qa-engineer**
 
-**For Simple Tasks (regular-software-engineer):**
-- Quick, focused implementation
-- Follows established patterns exactly
-- Makes incremental, targeted changes
-
-Both run in background.
-
-**⚠️ IMPORTANT**: After implementation completes, Claude must AUTOMATICALLY spawn qa-engineer (Phase 4).
-
-### Phase 4: QA Validation (qa-engineer)
-
-**Runs automatically after implementation.**
-
-**What the QA engineer does:**
+### Phase 4: QA Agent (Automatic)
 - Verifies test coverage
-- Identifies missing tests
-- Runs all relevant tests
+- Runs all tests
 - Assesses regression risk
 - Validates error handling
-- Thinks like a user
 
-**Why QA comes first:**
-- Catches functional issues early
-- Ensures tests pass before code review
-- Code reviewer doesn't waste time reviewing broken code
+**⚠️ After approval → AUTOMATICALLY spawn code-reviewer**
 
-**⚠️ IMPORTANT**: After QA approves, Claude must AUTOMATICALLY spawn code-reviewer (Phase 5).
-
-### Phase 5: Code Review (code-reviewer)
-
-**Runs automatically after QA approval.**
-
-**What the code reviewer does:**
-- Reviews code quality and readability
-- Checks adherence to project patterns
-- Identifies code smells
-- Suggests improvements
+### Phase 5: Code Reviewer (Automatic)
+- Reviews code quality
+- Checks pattern adherence
+- Identifies improvements
 - Provides constructive feedback
 
-**Why code review comes after QA:**
-- No point reviewing code that doesn't work
-- QA validated functionality first
-- Focus purely on code quality
-
-## Example Usage
+## Example Flow
 
 ```
 User: "Add endpoint to get vehicle statistics"
 
-1. Claude spawns Plan sub-agent (background)
-2. User reviews plan → "Use senior-software-engineer"
-3. Claude spawns senior-software-engineer (background)
-4. Implementation completes
-5. Claude AUTOMATICALLY spawns qa-engineer ⭐
-6. QA approves
-7. Claude AUTOMATICALLY spawns code-reviewer ⭐
-8. Feature complete
+1. Spawn plan agent (background) → Designs approach
+2. User reviews → "Looks good, use senior-software-engineer"
+3. Spawn senior-software-engineer (background) → Implements
+4. AUTOMATICALLY spawn qa-engineer → Validates tests ✅
+5. AUTOMATICALLY spawn code-reviewer → Reviews code ✅
+6. Feature complete!
 ```
+
+## Why This Works
+
+- **Background execution** - You can do other work
+- **Structured review** - Clear checkpoints
+- **Quality assurance** - Automatic QA + code review
+- **Separation of concerns** - Planning ≠ implementation ≠ testing ≠ review
 
 See @WORKFLOWS.md for complete workflow documentation.

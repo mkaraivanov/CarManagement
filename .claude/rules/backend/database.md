@@ -1,4 +1,5 @@
 ---
+agents: [plan, senior-software-engineer, regular-software-engineer]
 paths:
   - "backend/Data/**/*.cs"
   - "backend/Models/**/*.cs"

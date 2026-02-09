@@ -1,3 +1,9 @@
+---
+agents: [senior-software-engineer, regular-software-engineer]
+paths:
+  - "**/*"
+---
+
 # Git Workflow
 
 ## Branching Strategy

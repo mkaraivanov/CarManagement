@@ -1,4 +1,5 @@
 ---
+agents: [plan, senior-software-engineer, regular-software-engineer, code-reviewer]
 paths:
   - "web-frontend/src/services/**/*.js"
   - "web-frontend/src/services/**/*.ts"

@@ -1,4 +1,5 @@
 ---
+agents: [plan, senior-software-engineer, regular-software-engineer, code-reviewer]
 paths:
   - "backend/Controllers/**/*.cs"
   - "backend/DTOs/**/*.cs"

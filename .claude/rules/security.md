@@ -1,3 +1,11 @@
+---
+agents: [senior-software-engineer, regular-software-engineer, code-reviewer]
+paths:
+  - "**/*.cs"
+  - "**/*.jsx"
+  - "**/*.tsx"
+---
+
 # Security Best Practices
 
 ## Authentication & Authorization
