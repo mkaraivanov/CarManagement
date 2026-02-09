@@ -11,10 +11,11 @@ import {
   Alert,
   CircularProgress,
 } from '@mui/material';
-import { Save, Cancel, ArrowBack } from '@mui/icons-material';
+import { Save, Cancel } from '@mui/icons-material';
 import AppLayout from '../../components/layout/AppLayout';
 import userService from '../../services/userService';
 import PageTransition from '../../components/common/PageTransition';
+import BackButton from '../../components/common/BackButton';
 
 const UserForm = () => {
   const { id } = useParams();
@@ -85,14 +86,7 @@ const UserForm = () => {
       <PageTransition>
         <Box>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
-            <Button
-              variant="outlined"
-              startIcon={<ArrowBack />}
-              onClick={() => navigate(-1)}
-              disabled={saving}
-            >
-              Back
-            </Button>
+            <BackButton disabled={saving} />
             <Typography variant="h4">Edit User</Typography>
           </Box>
 

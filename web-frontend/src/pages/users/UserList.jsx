@@ -22,6 +22,7 @@ import { TableSkeleton } from '../../components/common/LoadingSkeleton';
 import ConfirmDialog from '../../components/common/ConfirmDialog';
 import PageTransition from '../../components/common/PageTransition';
 import EmptyState from '../../components/common/EmptyState';
+import BackButton from '../../components/common/BackButton';
 
 const UserList = () => {
   const [users, setUsers] = useState([]);
@@ -109,7 +110,8 @@ const UserList = () => {
     <AppLayout>
       <PageTransition>
         <Box>
-          <Box sx={{ mb: 3 }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 3 }}>
+            <BackButton to="/dashboard" variant="text" label="" />
             <Typography variant="h4">User Management</Typography>
           </Box>
 

@@ -24,7 +24,7 @@ import {
   TextField,
   MenuItem,
 } from '@mui/material';
-import { Edit, Delete, ArrowBack, Add, Build, LocalGasStation } from '@mui/icons-material';
+import { Edit, Delete, Add, Build, LocalGasStation } from '@mui/icons-material';
 import AppLayout from '../../components/layout/AppLayout';
 import vehicleService from '../../services/vehicleService';
 import serviceRecordService from '../../services/serviceRecordService';
@@ -33,6 +33,7 @@ import { VehicleDetailSkeleton } from '../../components/common/LoadingSkeleton';
 import ConfirmDialog from '../../components/common/ConfirmDialog';
 import PageTransition from '../../components/common/PageTransition';
 import EmptyState from '../../components/common/EmptyState';
+import BackButton from '../../components/common/BackButton';
 
 const VehicleDetails = () => {
   const { id } = useParams();
@@ -230,9 +231,7 @@ const VehicleDetails = () => {
       <PageTransition>
         <Box>
         <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
-          <Button startIcon={<ArrowBack />} onClick={() => navigate('/vehicles')}>
-            Back to Vehicles
-          </Button>
+          <BackButton to="/vehicles" label="Back to Vehicles" variant="text" />
         </Box>
 
         {error && (

@@ -21,6 +21,7 @@ import CreateScheduleForm from '../../components/maintenance/CreateScheduleForm'
 import vehicleService from '../../services/vehicleService';
 import maintenanceScheduleService from '../../services/maintenanceScheduleService';
 import PageTransition from '../../components/common/PageTransition';
+import BackButton from '../../components/common/BackButton';
 
 const MaintenancePage = () => {
   const [activeTab, setActiveTab] = useState(0);
@@ -98,6 +99,7 @@ const MaintenancePage = () => {
         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', mb: 3 }}>
           <Box>
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 1 }}>
+              <BackButton to="/dashboard" variant="text" label="" />
               <Build sx={{ fontSize: 32 }} />
               <Typography variant="h4">Preventive Maintenance</Typography>
             </Box>

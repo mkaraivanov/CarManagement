@@ -12,12 +12,13 @@ import {
   Alert,
   CircularProgress,
 } from '@mui/material';
-import { Save, Cancel, CloudUpload, ArrowBack } from '@mui/icons-material';
+import { Save, Cancel, CloudUpload } from '@mui/icons-material';
 import AppLayout from '../../components/layout/AppLayout';
 import vehicleService from '../../services/vehicleService';
 import vehicleReferenceService from '../../services/vehicleReferenceService';
 import RegistrationUploadDialog from '../../components/vehicles/RegistrationUploadDialog';
 import PageTransition from '../../components/common/PageTransition';
+import BackButton from '../../components/common/BackButton';
 
 const VehicleForm = () => {
   const { id } = useParams();
@@ -234,14 +235,7 @@ const VehicleForm = () => {
         <Box>
         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-            <Button
-              variant="outlined"
-              startIcon={<ArrowBack />}
-              onClick={() => navigate(-1)}
-              disabled={saving}
-            >
-              Back
-            </Button>
+            <BackButton disabled={saving} />
             <Typography variant="h4">
               {isEdit ? 'Edit Vehicle' : 'Add New Vehicle'}
             </Typography>
